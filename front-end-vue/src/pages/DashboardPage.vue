@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useQueries } from "@tanstack/vue-query";
 import * as L from "leaflet";
 import { api } from "@/api/http";
@@ -16,7 +16,9 @@ const totalProjects=computed(()=>metrics.value.reduce((sum,item)=>sum+item.proje
 const maxActivity=computed(()=>Math.max(1,...metrics.value.map(item=>item.activityIntensity)));
 const mapOne=ref<HTMLElement|null>(null),mapTwo=ref<HTMLElement|null>(null);
 let projectMap:L.Map|undefined,activityMap:L.Map|undefined;
-const mapError=ref("");
+const mapsReady=computed(()=>queries.value.length===3&&queries.value.every(q=>q.isSuccess.value));
+const mapError=computed(()=>queries.value.some(q=>q.isError.value)?"Failed to load dashboard map data.":"");
+const mapsDrawn=ref(false);
 function drawMap(target:HTMLElement,kind:"projects"|"activity"){
  const map=L.map(target,{scrollWheelZoom:false}).setView([22.97,78.65],4);
  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap"}).addTo(map);
@@ -30,16 +32,20 @@ function drawMap(target:HTMLElement,kind:"projects"|"activity"){
  }
  return map;
 }
+function initializeMaps(){if(mapsDrawn.value||!mapsReady.value||!mapOne.value||!mapTwo.value)return;projectMap=drawMap(mapOne.value,"projects");activityMap=drawMap(mapTwo.value,"activity");mapsDrawn.value=true;}
 function seededRandom(seed:string):()=>number{let hash=0;for(let i=0;i<seed.length;i++){hash=(hash<<5)-hash+seed.charCodeAt(i);hash|=0;}let state=hash;return()=>{state|=0;state=(state+0x6d2b79f5)|0;let t=Math.imul(state^(state>>>15),1|state);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
 function sampleStat(seed:string,base:number,spread:number){return Math.round(base+seededRandom(seed)()*spread);}
 const activeUsers=sampleStat("overview-active-users",800,900),totalRequests=sampleStat("overview-total-requests",2500,2000);
-onMounted(async()=>{try{await Promise.all(queries.value.map(q=>q.suspense()));if(mapOne.value)projectMap=drawMap(mapOne.value,"projects");if(mapTwo.value)activityMap=drawMap(mapTwo.value,"activity");}catch{mapError.value="Failed to load dashboard map data."; }});
+watch(mapsReady,initializeMaps,{flush:"post"});
+onMounted(initializeMaps);
 onBeforeUnmount(()=>{projectMap?.remove();activityMap?.remove();});
-const dateRange=new Intl.DateTimeFormat("en-US",{day:"2-digit",month:"short"}).format(new Date());
+const end=new Date(),start=new Date(end);start.setDate(end.getDate()-6);
+const day=(date:Date)=>new Intl.DateTimeFormat("en-US",{day:"2-digit",month:"short"}).format(date);
+const dateRange=day(start)+" – "+day(end)+" "+end.getFullYear();
 const projectLegend=[["100+","#7a0002"],["50–100","#c10003"],["20–50","#e2434b"],["5–20","#f0989c"],["1–5","#fbd9da"],["0","#f1f5f9"]];
 </script>
 <template><div>
- <div class="toolbar" style="margin-top:0"><div><h1 class="page-title">Dashboard</h1><p class="muted">Visualize project insights across India</p></div><div style="display:flex;gap:8px;align-items:center"><select aria-label="Region filter" class="filter-select"><option>All India</option></select><span class="pill">Last 7 days · {{dateRange}}</span></div></div>
+ <div class="toolbar" style="margin-top:0"><div><h1 class="page-title">Dashboard</h1><p class="muted">Visualize project insights across India</p></div><div style="display:flex;gap:8px;align-items:center"><select aria-label="Region filter" class="filter-select"><option>All India</option></select><span class="pill">{{dateRange}}</span></div></div>
  <div class="grid grid-3" style="margin-bottom:20px"><div class="card"><span class="muted">Total Projects</span><div class="stat-value">{{totalProjects.toLocaleString("en-US")}}</div><small class="muted">Across states and districts</small></div><div class="card"><span class="muted">Active Users</span><div class="stat-value">{{activeUsers.toLocaleString("en-US")}}</div><small class="muted">Illustrative overview metric</small></div><div class="card"><span class="muted">Total Requests</span><div class="stat-value">{{totalRequests.toLocaleString("en-US")}}</div><small class="muted">Illustrative overview metric</small></div></div>
  <p v-if="mapError" class="error">{{mapError}}</p>
  <div class="grid grid-2">
