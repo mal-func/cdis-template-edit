@@ -2,6 +2,7 @@ import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 import { api, ApiError, SESSION_EXPIRED_EVENT } from "@/api/http";
 import type { AuthOptions, LoginRequest, RegisterRequest, User } from "./types";
+export { hasPermission } from "./permissions";
 export const useAuthStore=defineStore("auth",()=>{
  const user=ref<User|null>(null),loading=ref(true),authOptions=ref<AuthOptions|null>(null),optionsLoading=ref(true);
  const isAuthenticated=computed(()=>user.value!==null);
@@ -11,10 +12,6 @@ export const useAuthStore=defineStore("auth",()=>{
  async function logout(){try{await api.post<void>("/auth/logout");}finally{user.value=null;}}
  async function loadOptions(){optionsLoading.value=true;try{authOptions.value=await api.get<AuthOptions>("/auth/options");}catch{authOptions.value={selfRegistration:false};}finally{optionsLoading.value=false;}}
  function clearSession(){user.value=null;}
- if(typeof window!=="undefined"){
-  window.addEventListener(SESSION_EXPIRED_EVENT,clearSession);
-  window.addEventListener("focus",()=>{if(user.value)void restoreSession();});
- }
+ if(typeof window!=="undefined"){window.addEventListener(SESSION_EXPIRED_EVENT,clearSession);window.addEventListener("focus",()=>{if(user.value)void restoreSession();});}
  return{user,loading,authOptions,optionsLoading,isAuthenticated,restoreSession,login,register,logout,loadOptions};
 });
-export function hasPermission(user:User|null,permission:string|string[]):boolean{if(!user)return false;const required=Array.isArray(permission)?permission:[permission];return required.some(item=>user.permissions.includes(item));}
