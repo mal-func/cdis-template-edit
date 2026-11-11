@@ -1,0 +1,30 @@
+name: Vue Frontend
+on:
+  pull_request:
+    paths:
+      - "front-end-vue/**"
+      - ".github/workflows/vue-frontend.yml"
+  push:
+    branches: [main]
+    paths:
+      - "front-end-vue/**"
+      - ".github/workflows/vue-frontend.yml"
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: front-end-vue
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+        env:
+          VITE_APP_NAME: CDIS
+          VITE_APP_ENV: testing
+          VITE_API_BASE_URL: /api/v1

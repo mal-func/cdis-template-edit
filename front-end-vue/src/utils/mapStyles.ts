@@ -1,0 +1,5 @@
+export type ProjectCountTier="none"|"veryLow"|"low"|"medium"|"high"|"veryHigh";
+export function getProjectCountTier(n:number):ProjectCountTier{if(n>=100)return"veryHigh";if(n>=50)return"high";if(n>=20)return"medium";if(n>=5)return"low";if(n>=1)return"veryLow";return"none";}
+export const tierColors:Record<ProjectCountTier,string>={veryHigh:"#7a0002",high:"#c10003",medium:"#e2434b",low:"#f0989c",veryLow:"#fbd9da",none:"#f1f5f9"};
+const stops=[[0,[37,99,235]],[.25,[34,211,238]],[.5,[74,222,128]],[.75,[250,204,21]],[1,[239,68,68]]] as const;
+export function getHeatmapColor(value:number,max:number):string{const t=max>0?Math.max(0,Math.min(1,value/max)):0;for(let i=0;i<stops.length-1;i++){const a=stops[i],b=stops[i+1];if(t>=a[0]&&t<=b[0]){const p=(t-a[0])/(b[0]-a[0]);const c=a[1].map((v,j)=>Math.round(v+(b[1][j]-v)*p));return "rgb("+c.join(",")+")";}}return"rgb(239,68,68)";}

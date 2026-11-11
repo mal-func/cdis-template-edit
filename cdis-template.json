@@ -1,24 +1,14 @@
 {
   "schemaVersion": "1.0",
   "name": "cdis-engineering-template",
-  "description": "Standard CDIS full-stack engineering project template",
-  "language": [
-    "javascript",
-    "typescript"
-  ],
-  "components": [
-    "front-end",
-    "back-end",
-    "deployment",
-    "docs"
+  "description": "Standard CDIS full-stack engineering template with React and Vue frontend alternatives",
+  "language": ["javascript", "typescript"],
+  "components": ["front-end", "front-end-vue", "back-end", "deployment", "docs"],
+  "frontends": [
+    { "id": "react", "path": "front-end", "default": true },
+    { "id": "vue", "path": "front-end-vue", "default": false }
   ],
   "files": {
-    "exclude": [
-      ".git",
-      "node_modules",
-      "coverage",
-      ".env",
-      ".env.local"
-    ]
+    "exclude": [".git", "node_modules", "coverage", ".env", ".env.local"]
   }
 }
