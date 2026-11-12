@@ -1,3 +1,4 @@
+from datetime import timezone
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,10 +8,15 @@ from app.dependencies import get_current_user
 from app.models import DemoChartDataset, DemoStateMetric, DemoTableDataset, User
 from app.responses import success
 router = APIRouter(prefix="/demo", tags=["demo"])
+
+def iso_utc(value):
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 @router.get("/map/states")
 async def state_metrics(_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     rows = await db.scalars(select(DemoStateMetric).order_by(DemoStateMetric.state_name.asc()))
-    return success({"states": [{"id": r.id, "stateCode": r.state_code, "stateName": r.state_name, "projectCount": r.project_count, "activityIntensity": r.activity_intensity} for r in rows]})
+    return success({"states": [{"id": r.id, "stateCode": r.state_code, "stateName": r.state_name, "projectCount": r.project_count, "activityIntensity": r.activity_intensity, "createdAt": iso_utc(r.created_at), "updatedAt": iso_utc(r.updated_at)} for r in rows]})
 @router.get("/charts")
 async def chart_datasets(type: str | None = Query(default=None), _user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     query = select(DemoChartDataset).options(selectinload(DemoChartDataset.points)).order_by(DemoChartDataset.title.asc())
