@@ -9,7 +9,7 @@ from app.config import settings
 from app.database import get_db
 from app.dependencies import get_current_user, require_csrf, safe_user
 from app.models import RefreshToken, Role, User
-from app.limiting import limiter
+from app.limiting import limiter, login_rate_key
 from app.client_ip import client_ip
 from app.responses import success
 from app.schemas import LoginRequest, RegisterRequest
@@ -50,7 +50,7 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
     set_cookies(response, access, refresh)
     return success({"user": safe_user(user)}, 201, response=response)
 @router.post("/login")
-@limiter.limit("10/15minutes")
+@limiter.limit("10/15minutes", key_func=login_rate_key)
 async def login(payload: LoginRequest, request: Request, response: Response, db: AsyncSession = Depends(get_db)):
     user = await db.scalar(select(User).where(User.email == payload.email, User.deleted_at.is_(None)).options(selectinload(User.roles).selectinload(Role.permissions)))
     if user is None:

@@ -12,7 +12,7 @@ def verify_password(password: str, encoded: str) -> bool:
     except (ValueError, TypeError): return False
 def sign_access_token(user_id: str) -> str:
     now = datetime.now(timezone.utc)
-    return jwt.encode({"sub": user_id, "iat": now, "exp": now + timedelta(minutes=settings.jwt_access_expires_in_minutes)}, settings.jwt_access_secret, algorithm="HS256")
+    return jwt.encode({"sub": user_id, "iat": now, "exp": now + timedelta(seconds=settings.jwt_access_expires_in_seconds)}, settings.jwt_access_secret, algorithm="HS256")
 def verify_access_token(token: str) -> dict:
     return jwt.decode(token, settings.jwt_access_secret, algorithms=["HS256"])
 def new_refresh_token() -> str: return token_hex(32)

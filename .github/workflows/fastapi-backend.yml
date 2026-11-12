@@ -28,4 +28,5 @@ jobs:
           cache-dependency-path: back-end/fastapi/pyproject.toml
       - run: pip install -e ".[dev]"
       - run: ruff check .
+      - run: alembic upgrade head
       - run: pytest
