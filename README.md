@@ -5,104 +5,48 @@ Canonical full-stack template with selectable frontend and backend implementatio
 - **Default frontend:** React + TypeScript + Vite at `front-end/react/`
 - **Alternative frontend:** Vue 3 + TypeScript + Vite at `front-end/vue/`
 - **Default backend:** Express + TypeScript at `back-end/express/`
-- **Alternative backend:** FastAPI + Python scaffold at `back-end/fastapi/`
+- **Alternative backend:** FastAPI + Python at `back-end/fastapi/`
 
-React and Vue are intended to consume the same API contract. Express is the established backend and currently provides the complete application API. FastAPI is an initial scaffold only and is not yet feature-equivalent.
+React and Vue are intended to consume the same API contract. Express is the established backend; FastAPI implements the corresponding endpoints and is being validated through its own workflow and shared end-to-end suite.
 
 All changes belong in this canonical repository first. The sibling frontend, backend and deployment repositories are exports maintained through `scripts/export-to-repos.sh`.
 
 ## Repository structure
-
 ```text
 .
 ├── front-end/
-│   ├── react/       # Default frontend
-│   └── vue/         # Alternative frontend
+│   ├── react/
+│   └── vue/
 ├── back-end/
-│   ├── express/     # Default backend
-│   └── fastapi/     # Alternative backend scaffold
+│   ├── express/
+│   └── fastapi/
 ├── deployment/
 ├── docs/
 ├── scripts/
 └── cdis-template.json
 ```
 
-## Prerequisites
+## Default React + Express stack
+Install each application from its own directory with `npm ci`, copy the relevant `.env.example` files to `.env`, start the MySQL service using `deployment/compose/compose.dev.yaml`, apply Express migrations and seed data, then run the Express and React dev servers. See the individual READMEs for exact commands.
 
-- Node.js 22+ and npm for React, Vue and Express
-- Python 3.12+ for FastAPI
-- Docker and Docker Compose v2 for the containerized stack
+## Alternative implementations
+- Vue: see `front-end/vue/README.md`. It consumes the same Express API; use it instead of React.
+- FastAPI: see `back-end/fastapi/README.md`. Install with `pip install -e ".[dev]"`, configure its environment, run `alembic upgrade head`, then `python -m app.seed` and `uvicorn app.main:app --reload --port 4000`.
 
-## Run the default React + Express stack
+To run the Compose stack with FastAPI instead of Express, combine the base file with `deployment/compose/compose.fastapi.yaml`. For Vue, set `FRONTEND_BUILD_CONTEXT=../../front-end/vue` in the Compose environment file.
 
-Install the Express backend:
-
-```bash
-cd back-end/express
-npm ci
-cp .env.example .env
-```
-
-Install React:
-
-```bash
-cd ../../front-end/react
-npm ci
-cp .env.example .env
-```
-
-Start MySQL and prepare the Express database from the repository root:
-
-```bash
-docker compose -f deployment/compose/compose.dev.yaml up -d --wait
-cd back-end/express
-npx prisma migrate deploy
-npm run prisma:seed
-npm run dev
-```
-
-In another terminal, start React:
-
-```bash
-cd front-end/react
-npm run dev
-```
-
-## Run the Vue frontend
-
-Vue uses the same Express API. Install and start it instead of React:
-
-```bash
-cd front-end/vue
-npm install
-npm run dev
-```
-
-Ensure the Express `CORS_ORIGIN` setting allows the Vue development server origin. The Vue app's own README documents its stack and Docker configuration.
-
-## FastAPI backend option
-
-The FastAPI directory is currently a scaffold, not a production-ready alternative. See `back-end/fastapi/README.md` for its current scope and missing parity work. Do not select it for a real application until authentication/session security, RBAC, database migrations, seed data, full API compatibility and tests have been implemented.
-
-## Build and test
-
-React and Express have their existing project-specific build and test commands in their respective READMEs. Vue has lint, unit-test and build scripts; its lockfile and browser-level parity coverage still need to be completed and verified. FastAPI currently has no complete test or migration suite.
-
-The combined CI workflow currently validates the established React + Express stack. Vue has a separate workflow. FastAPI needs its own validation workflow once its implementation is mature enough.
-
-## Template manifest
-
-`cdis-template.json` currently records the frontend/backend identifiers, paths and defaults:
-
-- `react` → `front-end/react` (default)
+## Manifest options
+- `react` → `front-end/react` (default frontend)
 - `vue` → `front-end/vue`
-- `express` → `back-end/express` (default)
+- `express` → `back-end/express` (default backend)
 - `fastapi` → `back-end/fastapi`
 
-The CLI integration is being developed separately. Treat this manifest structure as the template-side working contract until the CLI schema is confirmed.
+The CLI integration is developed separately; confirm its manifest schema and compatibility-selection behaviour before treating the current `cdis-template.json` structure as a finalized cross-repository contract.
+
+## Validation
+React/Express use the existing CI workflow. Vue and FastAPI have separate validation workflows. Passing unit/build workflows is not by itself proof of cross-backend browser E2E parity; run the shared E2E suite against both backend choices before production use.
 
 ## Documentation
-
 - `front-end/react/README.md`
 - `front-end/vue/README.md`
 - `back-end/express/README.md`
