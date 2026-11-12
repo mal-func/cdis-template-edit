@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Brings up the local compose stack (building from sibling repo
-# checkouts — ../cdis-backend, ../cdis-frontend) and prepares the
-# database, so the E2E suite has something real to run against.
+# Brings up the canonical monorepo Compose stack and prepares its database.
+# Set CDIS_BACKEND=fastapi to exercise the alternative backend through the
+# same frontend and browser suite; Express remains the default.
 #
-# Usage: ./scripts/e2e-up.sh
+# Usage: ./scripts/e2e-up.sh or CDIS_BACKEND=fastapi ./scripts/e2e-up.sh
 # Requires compose/.env to exist first (copy env/production.env.example).
 
 set -euo pipefail

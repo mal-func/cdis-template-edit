@@ -56,7 +56,7 @@ env/
 └── production.env.example     every variable the stacks need; never commit real values
 ```
 
-Both `compose.yaml` and `compose.production.yaml` define a one-off **`migrate`** service (`tools` profile): the backend image running `prisma migrate deploy` + the seed. `up` never starts it; the scripts run it explicitly with `docker compose run --rm migrate`. Seed-only secrets (`SEED_ADMIN_PASSWORD`) are passed to that job only — never to the long-running backend.
+The Express base stacks use Prisma migrations and seed data in their one-off `migrate` service (`tools` profile). The local `compose.fastapi.yaml` overlay replaces that command with `alembic upgrade head && python -m app.seed`. `up` never starts the migration job; run it explicitly with `docker compose run --rm migrate`. Seed-only secrets (`SEED_ADMIN_PASSWORD`) are passed to that job only — never to the long-running backend.
 
 ---
 

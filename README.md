@@ -7,7 +7,7 @@ Canonical full-stack template with selectable frontend and backend implementatio
 - **Default backend:** Express + TypeScript at `back-end/express/`
 - **Alternative backend:** FastAPI + Python at `back-end/fastapi/`
 
-React and Vue are intended to consume the same API contract. Express is the established backend; FastAPI implements the corresponding endpoints and is being validated through its own workflow and shared end-to-end suite.
+React and Vue are intended to consume the same API contract. Express is the established, production-integrated backend. FastAPI implements the corresponding HTTP API, authentication/RBAC behaviour and demo endpoints, and has a local Compose + shared E2E path; production image publishing and deploy/rollback integration remain separate work.
 
 All changes belong in this canonical repository first. The sibling frontend, backend and deployment repositories are exports maintained through `scripts/export-to-repos.sh`.
 

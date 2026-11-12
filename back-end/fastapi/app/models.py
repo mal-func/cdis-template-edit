@@ -1,14 +1,16 @@
 from datetime import datetime
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, JSON, String, Table, Column, func
+from sqlalchemy import DateTime, Float, ForeignKey, Index, Integer, JSON, String, Table, Column, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 user_roles = Table("user_roles", Base.metadata,
     Column("userId", ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
     Column("roleId", ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True),
     Column("assignedAt", DateTime, nullable=False, server_default=func.now()))
+Index("ix_user_roles_roleId", user_roles.c.roleId)
 role_permissions = Table("role_permissions", Base.metadata,
     Column("roleId", ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True),
     Column("permissionId", ForeignKey("permissions.id", ondelete="CASCADE"), primary_key=True))
+Index("ix_role_permissions_permissionId", role_permissions.c.permissionId)
 class User(Base):
     __tablename__ = "users"
     id: Mapped[str] = mapped_column(String(36), primary_key=True)

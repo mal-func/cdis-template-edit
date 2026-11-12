@@ -20,7 +20,7 @@ def request_meta(request: Request):
     return (client_ip(request), request.headers.get("user-agent", "")[:255])
 def set_cookies(response: Response, access: str, refresh: str):
     secure = settings.secure_cookies
-    response.set_cookie("access_token", access, httponly=True, secure=secure, samesite="lax", path="/", max_age=settings.jwt_access_expires_in_minutes * 60)
+    response.set_cookie("access_token", access, httponly=True, secure=secure, samesite="lax", path="/", max_age=settings.jwt_access_expires_in_seconds)
     response.set_cookie("refresh_token", refresh, httponly=True, secure=secure, samesite="lax", path=REFRESH_PATH, max_age=settings.refresh_token_expires_in_days * 86400)
     response.set_cookie("csrf_token", token_hex(24), httponly=False, secure=secure, samesite="lax", path="/", max_age=settings.refresh_token_expires_in_days * 86400)
 def clear_cookies(response: Response):
