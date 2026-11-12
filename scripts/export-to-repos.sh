@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Exports front-end/, back-end/, and deployment/ from this repo (the
+# Exports the default React frontend, Express backend, and deployment/ from this repo (the
 # canonical CDIS Template) out to the three independent sibling repos —
 # cdis-frontend, cdis-backend, cdis-deployment.
 #
@@ -56,8 +56,8 @@ sync_one() {
 }
 
 FAILED=0
-sync_one "front-end" "cdis-frontend" "${EXCLUDES_APP[@]}" || FAILED=1
-sync_one "back-end" "cdis-backend" "${EXCLUDES_APP[@]}" || FAILED=1
+sync_one "front-end/react" "cdis-frontend" "${EXCLUDES_APP[@]}" || FAILED=1
+sync_one "back-end/express" "cdis-backend" "${EXCLUDES_APP[@]}" || FAILED=1
 sync_one "deployment" "cdis-deployment" "${EXCLUDES_DEPLOY[@]}" || FAILED=1
 
 echo

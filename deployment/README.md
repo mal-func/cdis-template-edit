@@ -16,7 +16,7 @@ Internet
    │
    ▼
 Reverse Proxy (Apache httpd, single public origin)
-   ├── /api/*, /health  ──▶  backend container  ──▶  Prisma  ──▶  MySQL
+   ├── /api/*, /health  ──▶  backend container  ──▶  Prisma / SQLAlchemy  ──▶  MySQL
    └── /*               ──▶  frontend container (static build)
 ```
 
@@ -32,7 +32,8 @@ MySQL has no published port in these stacks — only the backend (and the one-of
 compose/
 ├── compose.dev.yaml           dev database only (MySQL on 127.0.0.1:3308) for running the apps on the host
 ├── mysql-init/                creates the cdis_test database on the dev MySQL's first start
-├── compose.yaml               local full stack — builds both images from source
+├── compose.yaml               local full stack — builds React + Express by default
+├── compose.fastapi.yaml       overlay to select the FastAPI backend
 ├── compose.production.yaml    production — pulls pinned images by commit SHA
 ├── compose.https-init.yaml    HTTPS bootstrap overlay (certificate issuance)
 └── compose.https.yaml         steady-state HTTPS overlay
@@ -55,7 +56,7 @@ env/
 └── production.env.example     every variable the stacks need; never commit real values
 ```
 
-Both `compose.yaml` and `compose.production.yaml` define a one-off **`migrate`** service (`tools` profile): the backend image running `prisma migrate deploy` + the seed. `up` never starts it; the scripts run it explicitly with `docker compose run --rm migrate`. Seed-only secrets (`SEED_ADMIN_PASSWORD`) are passed to that job only — never to the long-running backend.
+The Express base stacks use Prisma migrations and seed data in their one-off `migrate` service (`tools` profile). The local `compose.fastapi.yaml` overlay replaces that command with `alembic upgrade head && python -m app.seed`. `up` never starts the migration job; run it explicitly with `docker compose run --rm migrate`. Seed-only secrets (`SEED_ADMIN_PASSWORD`) are passed to that job only — never to the long-running backend.
 
 ---
 
@@ -68,11 +69,11 @@ cp env/production.env.example compose/.env
 ./scripts/e2e-up.sh
 ```
 
-This builds both images, starts MySQL + backend + frontend + reverse proxy, waits for `/health`, then runs the `migrate` job. The app is at `http://localhost:8080` (loopback only).
+This builds the selected backend and frontend images, starts MySQL + backend + frontend + reverse proxy, waits for `/health`, then runs the `migrate` job. Express is the default. To use FastAPI with the same React frontend and shared browser tests, run `CDIS_BACKEND=fastapi ./scripts/e2e-up.sh` instead. The FastAPI overlay switches the backend image, async database URL, migration command and seed command; the base Compose file remains unchanged. The app is at `http://localhost:8080` (loopback only).
 
 The local stack always has an admin: `SEED_ADMIN_*` default to the E2E suite's `e2e-admin@example.com` / `e2e-admin-password`. That password is public, which is why this stack binds to `127.0.0.1` only — don't expose it.
 
-Build contexts default to the monorepo's `../../back-end` and `../../front-end`. **Standalone `cdis-deployment`:** clone `cdis-backend` and `cdis-frontend` next to it and set, in `compose/.env`:
+Build contexts default to `../../back-end/express` and `../../front-end/react` in the monorepo. **Standalone `cdis-deployment`:** clone `cdis-backend` and `cdis-frontend` next to it and set, in `compose/.env`:
 
 ```bash
 BACKEND_BUILD_CONTEXT=../../cdis-backend

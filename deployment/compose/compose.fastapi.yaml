@@ -1,0 +1,30 @@
+# Run with: docker compose -f compose.yaml -f compose.fastapi.yaml up -d
+# Selects the FastAPI backend while preserving the existing proxy/database wiring.
+services:
+  backend:
+    build:
+      context: ../../back-end/fastapi
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      CORS_ORIGIN: ${PUBLIC_ORIGIN}
+      DATABASE_URL: mysql+asyncmy://cdis:${DB_PASSWORD}@mysql:3306/cdis
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
+      JWT_ACCESS_EXPIRES_IN: 15m
+      REFRESH_TOKEN_EXPIRES_IN_DAYS: 7
+      BCRYPT_SALT_ROUNDS: 12
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: 5
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: 15
+      ALLOW_SELF_REGISTRATION: "true"
+      TRUST_PROXY_HOPS: 1
+  migrate:
+    build:
+      context: ../../back-end/fastapi
+    environment:
+      DATABASE_URL: mysql+asyncmy://cdis:${DB_PASSWORD}@mysql:3306/cdis
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
+      BCRYPT_SALT_ROUNDS: 12
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-e2e-admin@example.com}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-e2e-admin-password}
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-Administrator}
+    command: ["sh", "-c", "alembic upgrade head && python -m app.seed"]
