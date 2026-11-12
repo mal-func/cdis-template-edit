@@ -4,7 +4,7 @@ Python 3.12 + FastAPI alternative to the existing Express backend. The intended 
 
 ## Local development
 
-Create a virtual environment, install with `pip install -e ".[dev]"`, copy `.env.example` to `.env`, then run `uvicorn app.main:app --reload --port 4000`. FastAPI's interactive API documentation is at `/docs`.
+Create a virtual environment, install with `pip install -e ".[dev]"`, set any required environment overrides, then run `uvicorn app.main:app --reload --port 4000`. FastAPI's interactive API documentation is at `/docs`.
 
 ## Status: scaffold only
 

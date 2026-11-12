@@ -4,7 +4,7 @@
 # multi-container wiring can be verified end-to-end (scripts/e2e-up.sh,
 # and CI's E2E stage) without a registry or a real server.
 #
-# Build contexts default to this monorepo's own back-end/ and front-end/.
+# Build contexts default to the monorepo's Express backend (back-end/express/) and React frontend (front-end/react/).
 # In the standalone cdis-deployment export, set BACKEND_BUILD_CONTEXT /
 # FRONTEND_BUILD_CONTEXT in compose/.env to your sibling clones instead
 # (e.g. ../../cdis-backend).
