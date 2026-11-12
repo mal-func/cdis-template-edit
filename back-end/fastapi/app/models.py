@@ -7,7 +7,7 @@ user_roles = Table("user_roles", Base.metadata,
     Column("roleId", ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True),
     Column("assignedAt", DateTime, nullable=False, server_default=func.now()))
 role_permissions = Table("role_permissions", Base.metadata,
-    Column("role_id", ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True),
+    Column("roleId", ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True),
     Column("permissionId", ForeignKey("permissions.id", ondelete="CASCADE"), primary_key=True))
 class User(Base):
     __tablename__ = "users"

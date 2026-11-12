@@ -47,9 +47,8 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
     ip, agent = request_meta(request)
     db.add(RefreshToken(id=str(uuid4()), user_id=user.id, token_hash=hash_refresh_token(refresh), expires_at=refresh_expiry(), created_by_ip=ip, user_agent=agent))
     await db.commit()
-    await db.refresh(user)
     set_cookies(response, access, refresh)
-    return success({"user": safe_user(user)}, 201)
+    return success({"user": safe_user(user)}, 201, response=response)
 @router.post("/login")
 @limiter.limit("10/15minutes")
 async def login(payload: LoginRequest, request: Request, response: Response, db: AsyncSession = Depends(get_db)):
@@ -71,7 +70,7 @@ async def login(payload: LoginRequest, request: Request, response: Response, db:
     db.add(RefreshToken(id=str(uuid4()), user_id=user.id, token_hash=hash_refresh_token(refresh), expires_at=refresh_expiry(), created_by_ip=ip, user_agent=agent))
     await db.commit()
     set_cookies(response, access, refresh)
-    return success({"user": safe_user(user)})
+    return success({"user": safe_user(user)}, response=response)
 @router.post("/refresh")
 async def refresh(request: Request, response: Response, db: AsyncSession = Depends(get_db), _csrf: None = Depends(require_csrf)):
     raw = request.cookies.get("refresh_token")
@@ -94,7 +93,7 @@ async def refresh(request: Request, response: Response, db: AsyncSession = Depen
     token.revoked_at, token.replaced_by_token_id = now, replacement.id
     await db.commit()
     set_cookies(response, access, new_raw)
-    return success({"user": safe_user(user)})
+    return success({"user": safe_user(user)}, response=response)
 @router.post("/logout")
 async def logout(request: Request, response: Response, db: AsyncSession = Depends(get_db), _user: User = Depends(get_current_user), _csrf: None = Depends(require_csrf)):
     raw = request.cookies.get("refresh_token")
@@ -104,7 +103,7 @@ async def logout(request: Request, response: Response, db: AsyncSession = Depend
             token.revoked_at = datetime.now(timezone.utc).replace(tzinfo=None)
             await db.commit()
     clear_cookies(response)
-    return success({"message": "Logged out successfully."})
+    return success({"message": "Logged out successfully."}, response=response)
 @router.get("/me")
 async def me(user: User = Depends(get_current_user)):
     return success({"user": safe_user(user)})

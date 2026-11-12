@@ -7,4 +7,4 @@ COPY app ./app
 COPY alembic.ini .
 COPY migrations ./migrations
 EXPOSE 4000
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 4000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "4000"]

@@ -5,7 +5,7 @@ on:
       - "back-end/fastapi/**"
       - ".github/workflows/fastapi-backend.yml"
   push:
-    branches: [main]
+    branches: ["**"]
     paths:
       - "back-end/fastapi/**"
       - ".github/workflows/fastapi-backend.yml"
