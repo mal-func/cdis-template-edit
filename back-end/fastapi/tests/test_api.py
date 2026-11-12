@@ -4,7 +4,11 @@ from app.main import app
 def test_health_endpoint():
     response = TestClient(app).get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    body = response.json()
+    assert body["success"] is True
+    assert body["data"]["status"] == "ok"
+    assert isinstance(body["data"]["uptimeSeconds"], int)
+    assert body["data"]["timestamp"].endswith("Z")
 
 def test_auth_options_uses_shared_envelope():
     response = TestClient(app).get("/api/v1/auth/options")
