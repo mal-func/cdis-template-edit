@@ -4,7 +4,7 @@ Production-ready full-stack engineering template for building secure, scalable, 
 
 **Start here**: [`docs/START-HERE.md`](docs/START-HERE.md) — the full golden path from clone to a first PR, in one place.
 
-This repository is the complete, canonical CDIS template: frontend, backend, deployment, and documentation, all together and kept current. The default frontend is React; an alternative Vue 3 frontend is available in `front-end-vue/`. Both frontends use the same Express backend and API contracts. Three sibling repositories — [`cdis-frontend`](https://github.com/WorkGaurav1/cdis-frontend), [`cdis-backend`](https://github.com/WorkGaurav1/cdis-backend), [`cdis-deployment`](https://github.com/WorkGaurav1/cdis-deployment) — are independently clone/build/run-able exports of this repo's `front-end/`, `back-end/`, and `deployment/` folders, for teams that only need one piece standalone. All new work happens here first; the three repos are regenerated from this one via `scripts/export-to-repos.sh`, never edited directly.
+This repository is the complete, canonical CDIS template: frontend, backend, deployment, and documentation, all together and kept current. The default frontend is React (`front-end/react/`); Vue is an alternative (`front-end/vue/`). Both frontends use the same Express backend and API contracts. Three sibling repositories — [`cdis-frontend`](https://github.com/WorkGaurav1/cdis-frontend), [`cdis-backend`](https://github.com/WorkGaurav1/cdis-backend), [`cdis-deployment`](https://github.com/WorkGaurav1/cdis-deployment) — are independently clone/build/run-able exports of this repo's `front-end/react/`, `back-end/express/`, and `deployment/` folders, for teams that only need one piece standalone. All new work happens here first; the three repos are regenerated from this one via `scripts/export-to-repos.sh`, never edited directly.
 
 ---
 
@@ -27,9 +27,9 @@ This repository is the complete, canonical CDIS template: frontend, backend, dep
 
 ```text
 .
-├── front-end/          # React application (default)
-├── front-end-vue/      # Vue 3 alternative frontend
-├── back-end/           # Node.js application / shared API
+├── front-end/react/          # React application (default)
+├── front-end/react/vue/      # Vue 3 alternative frontend
+├── back-end/express/           # Node.js application / shared API
 ├── deployment/         # Docker Compose, reverse proxy, deploy scripts, E2E suite
 ├── docs/               # Engineering documentation
 ├── scripts/            # Tooling for this repo itself (e.g. exporting to the 3 sibling repos)
@@ -68,7 +68,7 @@ npm install
 ### Vue frontend (alternative)
 
 ```bash
-cd front-end-vue
+cd front-end/react/vue
 npm install
 ```
 
@@ -82,9 +82,9 @@ npm install
 ## 3. Configure Environment
 
 ```bash
-cp back-end/.env.example back-end/.env
-cp front-end/.env.example front-end/.env
-cp front-end-vue/.env.example front-end-vue/.env
+cp back-end/express/.env.example back-end/express/.env
+cp front-end/react/.env.example front-end/react/.env
+cp front-end/react/vue/.env.example front-end/react/vue/.env
 ```
 
 The defaults match the dev database below — no edits needed for local development. When running the Vue frontend, ensure `CORS_ORIGIN` in the backend environment matches the Vue dev-server origin. The Vite dev server uses port 5173 by default.
@@ -115,12 +115,12 @@ Start either frontend in a separate terminal:
 ```bash
 cd front-end && npm run dev       # React, http://localhost:5173
 # or
-cd front-end-vue && npm run dev   # Vue, http://localhost:5173
+cd front-end/react/vue && npm run dev   # Vue, http://localhost:5173
 ```
 
 Use one frontend at a time with the default Vite port. Open the selected frontend and create an account with **Create one** on the sign-in page. To make yourself an admin, see [`docs/START-HERE.md`](docs/START-HERE.md#8-sign-in-and-become-an-admin).
 
-Alternatively, bring up the entire existing stack (MySQL + backend + React frontend + Apache reverse proxy) in containers at once with `deployment/scripts/e2e-up.sh` — see [`deployment/README.md`](deployment/README.md). To use the Vue container instead, set `FRONTEND_BUILD_CONTEXT=../../front-end-vue` in `deployment/compose/.env` before building the `frontend` service.
+Alternatively, bring up the entire existing stack (MySQL + backend + React frontend + Apache reverse proxy) in containers at once with `deployment/scripts/e2e-up.sh` — see [`deployment/README.md`](deployment/README.md). To use the Vue container instead, set `FRONTEND_BUILD_CONTEXT=../../front-end/react/vue` in `deployment/compose/.env` before building the `frontend` service.
 
 ---
 
@@ -136,7 +136,7 @@ npm run build
 ### Vue frontend
 
 ```bash
-cd front-end-vue
+cd front-end/react/vue
 npm run build
 ```
 
@@ -161,7 +161,7 @@ npm test
 ### Vue frontend
 
 ```bash
-cd front-end-vue
+cd front-end/react/vue
 npm test
 npm run lint
 ```
@@ -205,9 +205,9 @@ See [`docs/development/adding-api.md`](docs/development/adding-api.md) for the r
 | Document | Purpose |
 |----------|---------|
 | [`docs/START-HERE.md`](docs/START-HERE.md) | The golden path — read this first |
-| `front-end/README.md` | React frontend development guide |
-| [`front-end-vue/README.md`](front-end-vue/README.md) | Vue frontend development guide |
-| `back-end/README.md` | Backend development guide |
+| `front-end/react/README.md` | React frontend development guide |
+| [`front-end/react/vue/README.md`](front-end/react/vue/README.md) | Vue frontend development guide |
+| `back-end/express/README.md` | Backend development guide |
 | `deployment/README.md` | Docker Compose, reverse proxy, deploy/rollback, HTTPS |
 | `docs/architecture/` | System architecture, request flow, auth/authz |
 | `docs/standards/` | Engineering standards (code style, Docker, deployment, security, testing, etc.) |

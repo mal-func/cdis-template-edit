@@ -1,6 +1,6 @@
 # CDIS Vue frontend
 
-This is the Vue 3 + TypeScript alternative frontend for the CDIS engineering template. It consumes the same Express API as `front-end/`; it does not introduce a second backend or change the API contract.
+This is the Vue 3 + TypeScript alternative frontend for the CDIS engineering template. It consumes the same Express API as `front-end/react/`; it does not introduce a second backend or change the API contract.
 
 ## Stack
 
@@ -27,7 +27,7 @@ Set `VITE_API_BASE_URL` to the Express API base URL (including its `/api/v1` pre
 The Vue Dockerfile serves the built SPA through Nginx. To use it with the existing local Compose stack, set the build-context override in `deployment/compose/.env`:
 
 ```dotenv
-FRONTEND_BUILD_CONTEXT=../../front-end-vue
+FRONTEND_BUILD_CONTEXT=../../front-end/vue
 ```
 
 Then build and start the same Compose services from the repository root:

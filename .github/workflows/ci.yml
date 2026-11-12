@@ -36,31 +36,31 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: |
-            back-end/package-lock.json
-            front-end/package-lock.json
+            back-end/express/package-lock.json
+            front-end/react/package-lock.json
             deployment/package-lock.json
 
       - name: Install backend dependencies
-        working-directory: back-end
+        working-directory: back-end/express
         run: npm ci
 
       # generated/ is gitignored (it's a build artifact, not source) —
       # a fresh checkout has no Prisma Client until this runs. Needed
       # before type-check, tests, and the seed step below all import it.
       - name: Generate Prisma Client
-        working-directory: back-end
+        working-directory: back-end/express
         run: npx prisma generate
 
       - name: Install frontend dependencies
-        working-directory: front-end
+        working-directory: front-end/react
         run: npm ci
 
       # CI-only values, matching the *.env.example files. Not secrets —
       # the same test-only JWT secret already lives in
-      # back-end/vitest.config.ts for the unit-test suite; the whole
+      # back-end/express/vitest.config.ts for the unit-test suite; the whole
       # database is thrown away at the end of the job either way.
       - name: Write backend .env
-        working-directory: back-end
+        working-directory: back-end/express
         run: |
           cat > .env <<'EOF'
           NODE_ENV=development
@@ -83,7 +83,7 @@ jobs:
       # further down runs the fully containerized stack instead), so
       # it should build with the same value production actually uses.
       - name: Write frontend .env
-        working-directory: front-end
+        working-directory: front-end/react
         run: |
           cat > .env <<'EOF'
           VITE_APP_NAME=CDIS
@@ -103,41 +103,41 @@ jobs:
       # the GRANT the `cdis` user gets P1010 "access denied".
       # db:test:prepare is the exact command developers run locally.
       - name: Prepare test database
-        working-directory: back-end
+        working-directory: back-end/express
         run: |
           mysql -h127.0.0.1 -P3308 -uroot -pcdis_root_dev_password < ../deployment/compose/mysql-init/01-test-database.sql
           npm run db:test:prepare
 
       #  lint 
       - name: Lint backend
-        working-directory: back-end
+        working-directory: back-end/express
         run: npm run lint
 
       - name: Lint frontend
-        working-directory: front-end
+        working-directory: front-end/react
         run: npm run lint
 
       #  type check 
       - name: Type-check backend
-        working-directory: back-end
+        working-directory: back-end/express
         run: npm run build # back-end's "build" script *is* `tsc --noEmit` — see docs/standards/deployment.md
 
       - name: Type-check frontend
-        working-directory: front-end
+        working-directory: front-end/react
         run: npx tsc -b
 
       #  tests 
       - name: Backend tests (unit + integration)
-        working-directory: back-end
+        working-directory: back-end/express
         run: npm run test:all
 
       - name: Frontend tests
-        working-directory: front-end
+        working-directory: front-end/react
         run: npm run test
 
       #  build 
       - name: Build frontend
-        working-directory: front-end
+        working-directory: front-end/react
         run: npm run build
 
       #  Playwright (E2E)
@@ -154,7 +154,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       # CI-only values. compose.yaml builds from this checkout's own
-      # back-end/ and front-end/ by default.
+      # back-end/express/ and front-end/react/ by default.
       - name: Write deployment compose .env
         working-directory: deployment/compose
         run: |
@@ -200,20 +200,20 @@ jobs:
       # failure shows up as its own distinct, clearly-labeled stage
       # rather than being folded into the "tests" result above.
       - name: Backend coverage
-        working-directory: back-end
+        working-directory: back-end/express
         run: npm run test:coverage
 
       - name: Frontend coverage
-        working-directory: front-end
+        working-directory: front-end/react
         run: npm run test:coverage
 
       # security checks 
       - name: Audit backend dependencies
-        working-directory: back-end
+        working-directory: back-end/express
         run: npm audit --audit-level=high
 
       - name: Audit frontend dependencies
-        working-directory: front-end
+        working-directory: front-end/react
         run: npm audit --audit-level=high
 
       - name: Audit deployment (E2E tooling) dependencies
@@ -260,7 +260,7 @@ jobs:
       - name: Build and push backend
         uses: docker/build-push-action@v7
         with:
-          context: back-end
+          context: back-end/express
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
@@ -272,7 +272,7 @@ jobs:
       - name: Build and push frontend
         uses: docker/build-push-action@v7
         with:
-          context: front-end
+          context: front-end/react
           push: true
           platforms: linux/amd64,linux/arm64
           # Real production values: the API is same-origin behind the
