@@ -15,7 +15,6 @@ class Settings(BaseSettings):
     account_lockout_max_attempts: int = Field(default=5, gt=0)
     account_lockout_duration_minutes: int = Field(default=15, gt=0)
     allow_self_registration: bool = True
-    cookie_secure: bool | None = None
     trust_proxy_hops: int = Field(default=0, ge=0)
     @field_validator("jwt_access_expires_in")
     @classmethod
@@ -37,7 +36,7 @@ class Settings(BaseSettings):
         return max(1, amount // 1000) if unit == "ms" else amount * {"s": 1, "m": 60, "h": 3600, "d": 86400}[unit]
     @property
     def secure_cookies(self) -> bool:
-        return self.cookie_secure if self.cookie_secure is not None else self.node_env in {"production", "staging"}
+        return self.node_env in {"production", "staging"}
 @lru_cache
 def get_settings() -> Settings: return Settings()
 settings = get_settings()

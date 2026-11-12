@@ -5,7 +5,7 @@ services:
     build:
       context: ../../back-end/fastapi
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       PORT: 4000
       CORS_ORIGIN: ${PUBLIC_ORIGIN}
       DATABASE_URL: mysql+asyncmy://cdis:${DB_PASSWORD}@mysql:3306/cdis
@@ -16,7 +16,6 @@ services:
       ACCOUNT_LOCKOUT_MAX_ATTEMPTS: 5
       ACCOUNT_LOCKOUT_DURATION_MINUTES: 15
       ALLOW_SELF_REGISTRATION: "true"
-      COOKIE_SECURE: "false"
       TRUST_PROXY_HOPS: 1
   migrate:
     build:

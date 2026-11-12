@@ -23,7 +23,7 @@ python -m app.seed
 uvicorn app.main:app --reload --port 4000
 ```
 
-Interactive API documentation is at `/docs`. Set `CORS_ORIGIN` to the frontend origin. Use `COOKIE_SECURE=true` (or `NODE_ENV=staging/production`) behind HTTPS. Never use the example secret in production.
+Interactive API documentation is at `/docs`. Set `CORS_ORIGIN` to the frontend origin. Cookies are marked Secure automatically in `NODE_ENV=staging` or `production`, matching Express. Never use the example secret in production.
 
 ## API compatibility
 - `GET /health`
