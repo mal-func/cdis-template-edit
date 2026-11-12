@@ -19,7 +19,9 @@ def test_auth_options_uses_shared_envelope():
 def test_security_headers_are_present():
     response = TestClient(app).get("/health")
     assert response.headers["x-content-type-options"] == "nosniff"
-    assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["x-frame-options"] == "SAMEORIGIN"
+    assert response.headers["cross-origin-opener-policy"] == "same-origin"
+    assert response.headers["x-content-type-options"] == "nosniff"
 
 def test_openapi_exposes_the_express_route_contract():
     paths = TestClient(app).get("/openapi.json").json()["paths"]

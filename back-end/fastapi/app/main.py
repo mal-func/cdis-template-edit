@@ -27,7 +27,14 @@ app.add_middleware(CORSMiddleware, allow_origins=[settings.cors_origin], allow_c
 async def security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
-    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+    response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
+    response.headers.setdefault("Cross-Origin-Resource-Policy", "same-origin")
+    response.headers.setdefault("Origin-Agent-Cluster", "?1")
+    response.headers.setdefault("X-DNS-Prefetch-Control", "off")
+    response.headers.setdefault("X-Download-Options", "noopen")
+    response.headers.setdefault("X-Permitted-Cross-Domain-Policies", "none")
+    response.headers.setdefault("X-XSS-Protection", "0")
     response.headers.setdefault("Referrer-Policy", "no-referrer")
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
     if settings.secure_cookies:
