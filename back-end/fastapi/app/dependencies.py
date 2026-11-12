@@ -8,16 +8,16 @@ from app.models import Role, User
 from app.security import verify_access_token
 def safe_user(user: User) -> dict:
     roles = [role.name for role in user.roles if role.deleted_at is None]
-    permissions = sorted({permission.key for role in user.roles for permission in role.permissions})
+    permissions = sorted({permission.key for role in user.roles if role.deleted_at is None for permission in role.permissions})
     return {"id": user.id, "email": user.email, "name": user.name, "roles": roles, "permissions": permissions}
 async def get_current_user(request: Request, db: AsyncSession = Depends(get_db)) -> User:
     token = request.cookies.get("access_token")
     if not token: raise HTTPException(401, detail=("UNAUTHORIZED", "Authentication is required."))
     try: subject = verify_access_token(token).get("sub")
-    except InvalidTokenError: raise HTTPException(401, detail=("UNAUTHORIZED", "Invalid or expired access token.")) from None
+    except InvalidTokenError: raise HTTPException(401, detail=("UNAUTHORIZED", "Your session is invalid or has expired.")) from None
     result = await db.execute(select(User).where(User.id == subject, User.deleted_at.is_(None)).options(selectinload(User.roles).selectinload(Role.permissions)))
     user = result.scalar_one_or_none()
-    if user is None: raise HTTPException(401, detail=("UNAUTHORIZED", "Invalid or expired access token."))
+    if user is None: raise HTTPException(401, detail=("UNAUTHORIZED", "Your session is invalid or has expired."))
     return user
 def require_permission(*required: str):
     async def guard(user: User = Depends(get_current_user)) -> User:

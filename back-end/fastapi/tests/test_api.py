@@ -21,7 +21,6 @@ def test_security_headers_are_present():
     assert response.headers["x-content-type-options"] == "nosniff"
     assert response.headers["x-frame-options"] == "SAMEORIGIN"
     assert response.headers["cross-origin-opener-policy"] == "same-origin"
-    assert response.headers["x-content-type-options"] == "nosniff"
 
 def test_openapi_exposes_the_express_route_contract():
     paths = TestClient(app).get("/openapi.json").json()["paths"]
