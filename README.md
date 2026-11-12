@@ -1,230 +1,111 @@
 # CDIS Engineering Template
 
-Production-ready full-stack engineering template for building secure, scalable, and maintainable web applications using standardized engineering practices.
+Canonical full-stack template with selectable frontend and backend implementations.
 
-**Start here**: [`docs/START-HERE.md`](docs/START-HERE.md) — the full golden path from clone to a first PR, in one place.
+- **Default frontend:** React + TypeScript + Vite at `front-end/react/`
+- **Alternative frontend:** Vue 3 + TypeScript + Vite at `front-end/vue/`
+- **Default backend:** Express + TypeScript at `back-end/express/`
+- **Alternative backend:** FastAPI + Python scaffold at `back-end/fastapi/`
 
-This repository is the complete, canonical CDIS template: frontend, backend, deployment, and documentation, all together and kept current. The default frontend is React (`front-end/react/`); Vue is an alternative (`front-end/vue/`). Both frontends use the same Express backend and API contracts. Three sibling repositories — [`cdis-frontend`](https://github.com/WorkGaurav1/cdis-frontend), [`cdis-backend`](https://github.com/WorkGaurav1/cdis-backend), [`cdis-deployment`](https://github.com/WorkGaurav1/cdis-deployment) — are independently clone/build/run-able exports of this repo's `front-end/react/`, `back-end/express/`, and `deployment/` folders, for teams that only need one piece standalone. All new work happens here first; the three repos are regenerated from this one via `scripts/export-to-repos.sh`, never edited directly.
+React and Vue are intended to consume the same API contract. Express is the established backend and currently provides the complete application API. FastAPI is an initial scaffold only and is not yet feature-equivalent.
 
----
+All changes belong in this canonical repository first. The sibling frontend, backend and deployment repositories are exports maintained through `scripts/export-to-repos.sh`.
 
-## Features
-
-- React + TypeScript + Vite, with an alternative Vue 3 + TypeScript + Vite frontend
-- Node.js + Express + TypeScript backend
-- MySQL via Prisma, with real migrations and idempotent seeding
-- Cookie-based auth: JWT access tokens, rotating refresh tokens with reuse detection, CSRF (double-submit), RBAC permissions
-- Sign-in and self-registration pages (sign-up can be switched off), an admin role editor, and an initial admin seeded from env vars
-- React Hook Form + Zod on the React frontend; Zod validation on the Vue frontend; Zod DTOs on the backend
-- Docker (multi-stage, non-root, multi-platform) for the existing React app and backend; the Vue alternative has its own multi-stage Nginx image
-- Apache httpd reverse proxy, Docker Compose (dev database, local stack, production, HTTPS), deploy/rollback/health-check scripts with migrations applied on every deploy
-- Unit, integration (real MySQL), and end-to-end (Playwright) testing with enforced coverage floors for the existing stack; Vue frontend unit checks run in its own workflow
-- Real CI on every push and PR (lint → type-check → tests → build → E2E → coverage → security), then image publishing and optional continuous deployment
-
----
-
-## Repository Structure
+## Repository structure
 
 ```text
 .
-├── front-end/react/          # React application (default)
-├── front-end/react/vue/      # Vue 3 alternative frontend
-├── back-end/express/           # Node.js application / shared API
-├── deployment/         # Docker Compose, reverse proxy, deploy scripts, E2E suite
-├── docs/               # Engineering documentation
-├── scripts/            # Tooling for this repo itself (e.g. exporting to the 3 sibling repos)
-└── README.md
+├── front-end/
+│   ├── react/       # Default frontend
+│   └── vue/         # Alternative frontend
+├── back-end/
+│   ├── express/     # Default backend
+│   └── fastapi/     # Alternative backend scaffold
+├── deployment/
+├── docs/
+├── scripts/
+└── cdis-template.json
 ```
-
----
 
 ## Prerequisites
 
-- Git
-- Node.js 22+
-- npm
-- Docker + Docker Compose v2
+- Node.js 22+ and npm for React, Vue and Express
+- Python 3.12+ for FastAPI
+- Docker and Docker Compose v2 for the containerized stack
 
----
+## Run the default React + Express stack
 
-# Bootstrap
-
-## 1. Clone Repository
+Install the Express backend:
 
 ```bash
-git clone <repository-url>
-cd cdis-engineering-template
+cd back-end/express
+npm ci
+cp .env.example .env
 ```
 
-## 2. Install Dependencies
-
-### React frontend
+Install React:
 
 ```bash
-cd front-end
-npm install
+cd ../../front-end/react
+npm ci
+cp .env.example .env
 ```
 
-### Vue frontend (alternative)
-
-```bash
-cd front-end/react/vue
-npm install
-```
-
-### Backend
-
-```bash
-cd ../back-end
-npm install
-```
-
-## 3. Configure Environment
-
-```bash
-cp back-end/express/.env.example back-end/express/.env
-cp front-end/react/.env.example front-end/react/.env
-cp front-end/react/vue/.env.example front-end/react/vue/.env
-```
-
-The defaults match the dev database below — no edits needed for local development. When running the Vue frontend, ensure `CORS_ORIGIN` in the backend environment matches the Vue dev-server origin. The Vite dev server uses port 5173 by default.
-
-## 4. Start the Database and Prepare It
+Start MySQL and prepare the Express database from the repository root:
 
 ```bash
 docker compose -f deployment/compose/compose.dev.yaml up -d --wait
-
-cd back-end
-npx prisma migrate deploy   # create the tables
-npm run prisma:seed         # roles/permissions + demo data
-npm run db:test:prepare     # the separate database integration tests use
+cd back-end/express
+npx prisma migrate deploy
+npm run prisma:seed
+npm run dev
 ```
 
-`compose.dev.yaml` is MySQL only, on `localhost:3308`, with fixed dev credentials. It creates both the `cdis` (dev) and `cdis_test` (integration tests) databases.
-
-## 5. Start Backend and Frontend
-
-Start the backend:
+In another terminal, start React:
 
 ```bash
-cd back-end && npm run dev     # http://localhost:4000
+cd front-end/react
+npm run dev
 ```
 
-Start either frontend in a separate terminal:
+## Run the Vue frontend
+
+Vue uses the same Express API. Install and start it instead of React:
 
 ```bash
-cd front-end && npm run dev       # React, http://localhost:5173
-# or
-cd front-end/react/vue && npm run dev   # Vue, http://localhost:5173
+cd front-end/vue
+npm install
+npm run dev
 ```
 
-Use one frontend at a time with the default Vite port. Open the selected frontend and create an account with **Create one** on the sign-in page. To make yourself an admin, see [`docs/START-HERE.md`](docs/START-HERE.md#8-sign-in-and-become-an-admin).
+Ensure the Express `CORS_ORIGIN` setting allows the Vue development server origin. The Vue app's own README documents its stack and Docker configuration.
 
-Alternatively, bring up the entire existing stack (MySQL + backend + React frontend + Apache reverse proxy) in containers at once with `deployment/scripts/e2e-up.sh` — see [`deployment/README.md`](deployment/README.md). To use the Vue container instead, set `FRONTEND_BUILD_CONTEXT=../../front-end/react/vue` in `deployment/compose/.env` before building the `frontend` service.
+## FastAPI backend option
 
----
+The FastAPI directory is currently a scaffold, not a production-ready alternative. See `back-end/fastapi/README.md` for its current scope and missing parity work. Do not select it for a real application until authentication/session security, RBAC, database migrations, seed data, full API compatibility and tests have been implemented.
 
-# Build
+## Build and test
 
-### React frontend
+React and Express have their existing project-specific build and test commands in their respective READMEs. Vue has lint, unit-test and build scripts; its lockfile and browser-level parity coverage still need to be completed and verified. FastAPI currently has no complete test or migration suite.
 
-```bash
-cd front-end
-npm run build
-```
+The combined CI workflow currently validates the established React + Express stack. Vue has a separate workflow. FastAPI needs its own validation workflow once its implementation is mature enough.
 
-### Vue frontend
+## Template manifest
 
-```bash
-cd front-end/react/vue
-npm run build
-```
+`cdis-template.json` currently records the frontend/backend identifiers, paths and defaults:
 
-### Backend
+- `react` → `front-end/react` (default)
+- `vue` → `front-end/vue`
+- `express` → `back-end/express` (default)
+- `fastapi` → `back-end/fastapi`
 
-```bash
-cd back-end
-npm run build   # type-check only — the backend ships TypeScript source, run via tsx, not a compiled build
-```
+The CLI integration is being developed separately. Treat this manifest structure as the template-side working contract until the CLI schema is confirmed.
 
----
+## Documentation
 
-# Testing
-
-### React frontend
-
-```bash
-cd front-end
-npm test
-```
-
-### Vue frontend
-
-```bash
-cd front-end/react/vue
-npm test
-npm run lint
-```
-
-### Backend
-
-```bash
-cd back-end
-npm test                  # unit
-npm run test:integration  # real MySQL — needs the dev database (step 4)
-```
-
-### End-to-End
-
-The existing cross-application E2E suite drives a real browser against the deployed React stack — see [`deployment/README.md`](deployment/README.md):
-
-```bash
-cd deployment
-./scripts/e2e-up.sh
-npm run test:e2e
-```
-
-Vue-specific browser E2E coverage remains to be added; the Vue unit workflow does not yet establish full browser-level parity.
-
----
-
-# Development Workflow
-
-## Add a New Feature
-
-See [`docs/development/adding-feature.md`](docs/development/adding-feature.md) for the actual, project-specific sequence (feature-module registration, route/nav wiring, permission gating, tests).
-
-## Add an API Endpoint
-
-See [`docs/development/adding-api.md`](docs/development/adding-api.md) for the real route → DTO → middleware → controller → service → repository sequence.
-
----
-
-# Documentation
-
-| Document | Purpose |
-|----------|---------|
-| [`docs/START-HERE.md`](docs/START-HERE.md) | The golden path — read this first |
-| `front-end/react/README.md` | React frontend development guide |
-| [`front-end/react/vue/README.md`](front-end/react/vue/README.md) | Vue frontend development guide |
-| `back-end/express/README.md` | Backend development guide |
-| `deployment/README.md` | Docker Compose, reverse proxy, deploy/rollback, HTTPS |
-| `docs/architecture/` | System architecture, request flow, auth/authz |
-| `docs/standards/` | Engineering standards (code style, Docker, deployment, security, testing, etc.) |
-| `docs/development/` | Development workflows (starting a new project, adding a feature, an endpoint, a module) |
-| `docs/architecture-decision-record/` | Architectural decision records |
-
----
-
-# References
-
-- React — https://react.dev
-- Vue — https://vuejs.org/
-- Vite — https://vite.dev
-- Node.js — https://nodejs.org
-- Express — https://expressjs.com
-- TypeScript — https://www.typescriptlang.org
-- MySQL — https://dev.mysql.com/doc/
-- Docker — https://docs.docker.com/
-- Apache httpd — https://httpd.apache.org/docs/2.4/
-- OWASP Cheat Sheet Series — https://cheatsheetseries.owasp.org/
+- `front-end/react/README.md`
+- `front-end/vue/README.md`
+- `back-end/express/README.md`
+- `back-end/fastapi/README.md`
+- `deployment/README.md`
+- `docs/START-HERE.md`
