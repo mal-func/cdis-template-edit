@@ -33,7 +33,8 @@ for _ in $(seq 1 30); do
 done
 
 if [ "$HEALTHY" -ne 1 ]; then
-  echo "==> Backend never became healthy — check: docker compose "${COMPOSE_FILES[@]}" logs" >&2
+  echo "==> Backend never became healthy — dumping Compose logs:" >&2
+  docker compose "${COMPOSE_FILES[@]}" logs >&2
   exit 1
 fi
 
