@@ -47,7 +47,7 @@ class RefreshToken(Base):
     token_hash: Mapped[str] = mapped_column("tokenHash", String(255), unique=True)
     expires_at: Mapped[datetime] = mapped_column("expiresAt", DateTime)
     revoked_at: Mapped[datetime | None] = mapped_column("revokedAt", DateTime)
-    replaced_by_token_id: Mapped[str | None] = mapped_column("replacedByTokenId", ForeignKey("refresh_tokens.id"), unique=True)
+    replaced_by_token_id: Mapped[str | None] = mapped_column("replacedByTokenId", ForeignKey("refresh_tokens.id", ondelete="SET NULL"), unique=True)
     created_by_ip: Mapped[str | None] = mapped_column("createdByIp", String(64))
     user_agent: Mapped[str | None] = mapped_column("userAgent", String(255))
     created_at: Mapped[datetime] = mapped_column("createdAt", DateTime, server_default=func.now())
