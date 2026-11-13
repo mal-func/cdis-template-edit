@@ -35,7 +35,7 @@ jobs:
       - name: Apply non-breaking dependency security updates
         run: |
           set -e
-          for directory in back-end/express front-end/react deployment; do
+          for directory in back-end/express front-end/react front-end/vue deployment; do
             echo "Updating dependencies in $directory"
             (cd "$directory" && npm audit fix) || echo "Non-blocking advisories may remain; the high-severity audit gate below is authoritative."
           done
@@ -43,7 +43,7 @@ jobs:
       - name: Verify high-severity advisories are resolved
         run: |
           set -e
-          for directory in back-end/express front-end/react deployment; do
+          for directory in back-end/express front-end/react front-end/vue deployment; do
             echo "Auditing $directory"
             (cd "$directory" && npm audit --audit-level=high)
           done
@@ -52,11 +52,12 @@ jobs:
         env:
           HEAD_BRANCH: ${{ github.ref_name }}
         run: |
-          if [ -n "$(git status --porcelain -- back-end/express front-end/react deployment)" ]; then
+          if [ -n "$(git status --porcelain -- back-end/express front-end/react front-end/vue deployment)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add back-end/express/package.json back-end/express/package-lock.json
             git add front-end/react/package.json front-end/react/package-lock.json
+            git add front-end/vue/package.json front-end/vue/package-lock.json
             git add deployment/package.json deployment/package-lock.json
             git commit -m "chore(deps): apply non-breaking security updates"
             git fetch origin "$HEAD_BRANCH"
