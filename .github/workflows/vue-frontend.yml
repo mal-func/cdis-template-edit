@@ -37,7 +37,7 @@ jobs:
         env:
           HEAD_BRANCH: ${{ github.head_ref }}
         run: |
-          if [ -f front-end/vue/package-lock.json ] && ! git diff --quiet -- front-end/vue/package-lock.json; then
+          if [ -f front-end/vue/package-lock.json ] && [ -n "$(git status --porcelain -- front-end/vue/package-lock.json)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add front-end/vue/package-lock.json
