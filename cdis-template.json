@@ -46,6 +46,9 @@
       ".env.local",
       ".venv",
       "__pycache__"
+    ],
+    "include": [
+      ".gitignore"
     ]
   }
 }
