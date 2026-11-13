@@ -48,7 +48,7 @@ function requirePositiveInt(name: string): number {
   return parsed;
 }
 
-function requireNonNegativeInt(name: string): number {
+function optionalPositiveInt(name: string, fallback: number): number {\n  const raw = process.env[name];\n  if (raw === undefined) return fallback;\n  const parsed = Number(raw);\n  if (!Number.isInteger(parsed) || parsed <= 0) {\n    throw new Error(`[Configuration Error] Invalid ${name}: "${raw}" must be a positive integer`);\n  }\n  return parsed;\n}\n\nfunction requireNonNegativeInt(name: string): number {
   const raw = requireEnv(name);
   const parsed = Number(raw);
 
@@ -91,7 +91,7 @@ export const env = {
    * proxy's IP (one rate-limit bucket for everyone); too high and a
    * client can spoof its IP via X-Forwarded-For.
    */
-  trustProxyHops: requireNonNegativeInt("TRUST_PROXY_HOPS"),
+  trustProxyHops: requireNonNegativeInt("TRUST_PROXY_HOPS"),\n  globalRateLimitMax: optionalPositiveInt("GLOBAL_RATE_LIMIT_MAX", 100),
 
   auth: {
     jwtAccessSecret: requireEnv("JWT_ACCESS_SECRET"),
