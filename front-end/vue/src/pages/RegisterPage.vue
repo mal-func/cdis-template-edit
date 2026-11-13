@@ -35,24 +35,28 @@ async function submit(){errors.value={};serverError.value="";const parsed=regist
       </div>
       <template v-else>
         <div class="field">
-          <label>Name</label><input
+          <label for="register-name">Full name</label><input
+            id="register-name"
             v-model="values.name"
             autocomplete="name"
           ><span class="error">{{ errors.name }}</span>
         </div><div class="field">
-          <label>Email</label><input
+          <label for="register-email">Email address</label><input
+            id="register-email"
             v-model="values.email"
             type="email"
             autocomplete="email"
           ><span class="error">{{ errors.email }}</span>
         </div><div class="field">
-          <label>Password</label><input
+          <label for="register-password">Password</label><input
+            id="register-password"
             v-model="values.password"
             type="password"
             autocomplete="new-password"
           ><span class="error">{{ errors.password }}</span>
         </div><div class="field">
-          <label>Confirm password</label><input
+          <label for="register-confirm-password">Confirm password</label><input
+            id="register-confirm-password"
             v-model="values.confirmPassword"
             type="password"
             autocomplete="new-password"
@@ -68,7 +72,7 @@ async function submit(){errors.value={};serverError.value="";const parsed=regist
           style="width:100%"
           :disabled="busy"
         >
-          {{ busy?"Creating account…":"Create account" }}
+          {{ busy?"Creating account…":"Create Account" }}
         </button>
       </template>
       <p
