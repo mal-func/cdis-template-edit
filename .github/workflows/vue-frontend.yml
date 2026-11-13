@@ -14,6 +14,10 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    env:
+      VITE_APP_NAME: CDIS
+      VITE_APP_ENV: testing
+      VITE_API_BASE_URL: /api/v1
     defaults:
       run:
         working-directory: front-end/vue
@@ -40,10 +44,6 @@ jobs:
 
       - name: Production build
         run: npm run build
-        env:
-          VITE_APP_NAME: CDIS
-          VITE_APP_ENV: testing
-          VITE_API_BASE_URL: /api/v1
 
       - name: Audit dependencies
         run: npm audit --audit-level=high
