@@ -10,5 +10,8 @@
   "license": "ISC",
   "devDependencies": {
     "@playwright/test": "^1.62.1"
+  },
+  "allowScripts": {
+    "fsevents@2.3.2": true
   }
 }
