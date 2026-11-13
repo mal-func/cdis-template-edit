@@ -37,7 +37,7 @@ jobs:
           set -e
           for directory in back-end/express front-end/react deployment; do
             echo "Updating dependencies in $directory"
-            (cd "$directory" && npm audit fix)
+            (cd "$directory" && npm audit fix) || echo "Non-blocking advisories may remain; the high-severity audit gate below is authoritative."
           done
 
       - name: Verify high-severity advisories are resolved
