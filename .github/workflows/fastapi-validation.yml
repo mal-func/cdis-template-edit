@@ -44,3 +44,14 @@ jobs:
 
       - name: Run tests
         run: pytest -q
+
+      - name: Verify database seed is idempotent
+        env:
+          DATABASE_URL: "sqlite+aiosqlite:///./seed-smoke.db"
+          SEED_ADMIN_EMAIL: seed-admin@example.com
+          SEED_ADMIN_PASSWORD: seed-admin-password
+          SEED_ADMIN_NAME: Seed Admin
+        run: |
+          alembic upgrade head
+          python -m app.seed
+          python -m app.seed
