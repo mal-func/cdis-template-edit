@@ -20,7 +20,7 @@ jobs:
         working-directory: back-end/fastapi
     env:
       JWT_ACCESS_SECRET: test-secret-that-is-long-enough-for-cdis
-      DATABASE_URL: sqlite+aiosqlite:///:memory:
+      DATABASE_URL: "sqlite+aiosqlite:///:memory:"
       NODE_ENV: test
     steps:
       - name: Check out repository
