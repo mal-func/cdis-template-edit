@@ -16,11 +16,15 @@ jobs:
       run:
         working-directory: front-end/vue
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
-      - run: npm install
+      - name: Install Vue dependencies
+        run: |
+          npm install --global npm@11
+          npm cache clean --force
+          npm install --no-audit --no-fund --legacy-peer-deps
       - run: npm run lint
       - run: npm test
       - run: npm run build
