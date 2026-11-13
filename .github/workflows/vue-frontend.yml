@@ -1,4 +1,6 @@
 name: Vue Frontend
+permissions:
+  contents: write
 on:
   pull_request:
     paths:
@@ -24,7 +26,26 @@ jobs:
         run: |
           npm install --global npm@11
           npm cache clean --force
-          npm install --no-audit --no-fund --legacy-peer-deps
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install --no-audit --no-fund --legacy-peer-deps
+          fi
+      - name: Commit generated Vue lockfile (one-time bootstrap)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        working-directory: .
+        env:
+          HEAD_BRANCH: ${{ github.head_ref }}
+        run: |
+          if [ -f front-end/vue/package-lock.json ] && ! git diff --quiet -- front-end/vue/package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add front-end/vue/package-lock.json
+            git commit -m "chore(vue): add reproducible npm lockfile"
+            git push origin "HEAD:${HEAD_BRANCH}"
+          fi
+      - name: Verify clean Vue dependency install
+        run: npm ci
       - name: Preserve generated dependency lockfile for review
         if: always()
         uses: actions/upload-artifact@v6
