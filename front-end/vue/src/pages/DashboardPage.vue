@@ -11,7 +11,7 @@ const queries=useQueries({queries:[
  {queryKey:["dashboard","mask"],queryFn:async()=>{const r=await fetch("/data/india-mask.geojson");if(!r.ok)throw new Error("Map mask unavailable");return r.json() as Promise<GeoJSON.FeatureCollection>}},
  {queryKey:["dashboard","state-metrics"],queryFn:()=>api.get<{states:StateMetric[]}>("/demo/map/states")},
 ]});
-const metrics=computed(()=>queries.value[2]?.data.value?.states??[]);
+const metrics=computed<StateMetric[]>(()=>queries.value[2]?.data?.states??[]);
 const totalProjects=computed(()=>metrics.value.reduce((sum,item)=>sum+item.projectCount,0));
 const maxActivity=computed(()=>Math.max(1,...metrics.value.map(item=>item.activityIntensity)));
 const mapOne=ref<HTMLElement|null>(null),mapTwo=ref<HTMLElement|null>(null);
@@ -22,10 +22,10 @@ const mapsDrawn=ref(false);
 function drawMap(target:HTMLElement,kind:"projects"|"activity"){
  const map=L.map(target,{scrollWheelZoom:false}).setView([22.97,78.65],4);
  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap"}).addTo(map);
- const mask=queries.value[1]?.data.value as GeoJSON.FeatureCollection|undefined;
+ const mask=queries.value[1]?.data as GeoJSON.FeatureCollection|undefined;
  if(mask)L.geoJSON(mask as never,{style:{color:"#fff",weight:0,fillColor:"#fff",fillOpacity:1,interactive:false}}).addTo(map);
- const features=queries.value[0]?.data.value?.features as District[]|undefined;
- const stateMap=new Map(metrics.value.map(item=>[item.stateCode,item]));
+ const features=queries.value[0]?.data?.features as District[]|undefined;
+ const stateMap=new Map<string,StateMetric>(metrics.value.map((item):[string,StateMetric]=>[item.stateCode,item]));
  if(features){
   const layer=L.geoJSON(features as never,{style:(feature)=>{const props=(feature as unknown as District).properties;const metric=stateMap.get(props.st_code);return{color:"#fff",weight:.65,fillOpacity:.82,fillColor:kind==="projects"?(tierColors[getProjectCountTier(metric?.projectCount??0)]??"#e2e8f0"):getHeatmapColor(metric?.activityIntensity??0,maxActivity.value)};},onEachFeature:(feature,layer)=>{const props=(feature as unknown as District).properties;const metric=stateMap.get(props.st_code);const label=kind==="projects"?"Projects":"Activity";const value=kind==="projects"?(metric?.projectCount??0):(metric?.activityIntensity??0);layer.bindTooltip("<strong>"+String(props.st_nm)+"</strong><br/>"+(props.district?"District: "+String(props.district)+"<br/>":"")+label+": "+String(value));}}).addTo(map);
   try{map.fitBounds(layer.getBounds(),{padding:[8,8]});}catch{/* Empty geojson */}
