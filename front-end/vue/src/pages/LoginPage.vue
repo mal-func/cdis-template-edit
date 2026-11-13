@@ -30,7 +30,7 @@ async function submit(){
         Sign in to your CDIS workspace
       </p>
       <div class="field">
-        <label for="email">Email</label><input
+        <label for="email">Email address</label><input
           id="email"
           v-model="values.email"
           type="email"
@@ -59,7 +59,7 @@ async function submit(){
         style="width:100%"
         :disabled="busy"
       >
-        {{ busy?"Signing in…":"Sign in" }}
+        {{ busy?"Signing in…":"Sign In" }}
       </button>
       <p
         v-if="auth.authOptions?.selfRegistration"
