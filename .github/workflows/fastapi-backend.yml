@@ -8,7 +8,7 @@ on:
       - "deployment/e2e/**"
       - ".github/workflows/fastapi-backend.yml"
   push:
-    branches: ["**"]
+    branches: ["main"]
     paths:
       - "back-end/fastapi/**"
       - "deployment/compose/compose.fastapi.yaml"
