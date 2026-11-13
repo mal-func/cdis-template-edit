@@ -48,7 +48,17 @@ function requirePositiveInt(name: string): number {
   return parsed;
 }
 
-function optionalPositiveInt(name: string, fallback: number): number {\n  const raw = process.env[name];\n  if (raw === undefined) return fallback;\n  const parsed = Number(raw);\n  if (!Number.isInteger(parsed) || parsed <= 0) {\n    throw new Error(`[Configuration Error] Invalid ${name}: "${raw}" must be a positive integer`);\n  }\n  return parsed;\n}\n\nfunction requireNonNegativeInt(name: string): number {
+function optionalPositiveInt(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined) return fallback;
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`[Configuration Error] Invalid ${name}: "${raw}" must be a positive integer`);
+  }
+  return parsed;
+}
+
+function requireNonNegativeInt(name: string): number {
   const raw = requireEnv(name);
   const parsed = Number(raw);
 
