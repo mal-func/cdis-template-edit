@@ -15,6 +15,14 @@ export default tseslint.config(
     }
   },
   {
+    files: ["**/*.{ts,vue}"],
+    rules: {
+      // TypeScript's compiler resolves symbols and types; ESLint's core
+      // no-undef rule does not understand type-only references in SFC scripts.
+      "no-undef": "off"
+    }
+  },
+  {
     files: ["**/*.{js,ts,vue}"],
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
     rules: {
