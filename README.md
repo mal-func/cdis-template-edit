@@ -41,7 +41,7 @@ To run the Compose stack with FastAPI instead of Express, combine the base file 
 - `express` → `back-end/express` (default backend)
 - `fastapi` → `back-end/fastapi`
 
-The CLI integration is developed separately; confirm its manifest schema and compatibility-selection behaviour before treating the current `cdis-template.json` structure as a finalized cross-repository contract.
+The CLI reads `cdis-template.json` to select frontend/backend directories and shared components. `files.include` declares additional root-level files (currently `.gitignore`) that generated projects need. The compatibility map remains optional until the maintainers have verified and agreed which frontend/backend combinations are supported.
 
 ## Validation
 React/Express use the existing CI workflow. Vue and FastAPI have separate validation workflows. Passing unit/build workflows is not by itself proof of cross-backend browser E2E parity; run the shared E2E suite against both backend choices before production use.
