@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter, RouterLink, RouterView } from "vue-router";
 import { useAuthStore, hasPermission } from "@/auth/store";
 import { appConfig } from "@/config/env";
-import { LayoutDashboard, LineChart, ChartPie, Table2, Users, Settings, Menu, LogOut, Bell, MoonStar, Search, ChevronDown } from "lucide-vue-next";
+import { LayoutDashboard, LineChart, ChartPie, Table2, Users, Settings, Menu, Bell, MoonStar, Search, ChevronDown } from "lucide-vue-next";
 const auth=useAuthStore(),route=useRoute(),router=useRouter();
 const collapsed=ref(false),mobileOpen=ref(false),accountMenuOpen=ref(false),dark=ref(typeof window==="undefined"||localStorage.getItem("cdis-shell-theme")!=="light");
 const searchQuery=ref(""),searchInput=ref<HTMLInputElement|null>(null);
