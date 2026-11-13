@@ -3,9 +3,9 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter, RouterLink, RouterView } from "vue-router";
 import { useAuthStore, hasPermission } from "@/auth/store";
 import { appConfig } from "@/config/env";
-import { LayoutDashboard, LineChart, ChartPie, Table2, Users, Settings, Menu, LogOut, Bell, MoonStar, Search } from "lucide-vue-next";
+import { LayoutDashboard, LineChart, ChartPie, Table2, Users, Settings, Menu, LogOut, Bell, MoonStar, Search, ChevronDown } from "lucide-vue-next";
 const auth=useAuthStore(),route=useRoute(),router=useRouter();
-const collapsed=ref(false),mobileOpen=ref(false),dark=ref(typeof window==="undefined"||localStorage.getItem("cdis-shell-theme")!=="light");
+const collapsed=ref(false),mobileOpen=ref(false),accountMenuOpen=ref(false),dark=ref(typeof window==="undefined"||localStorage.getItem("cdis-shell-theme")!=="light");
 const searchQuery=ref(""),searchInput=ref<HTMLInputElement|null>(null);
 const nav=[{label:"Dashboard",to:"/dashboard",icon:LayoutDashboard},{label:"Graphs",to:"/graphs",icon:LineChart},{label:"Charts",to:"/charts",icon:ChartPie},{label:"Table",to:"/tables",icon:Table2}];
 const title=computed(()=>String(route.meta.title??"Dashboard"));
@@ -17,7 +17,7 @@ watch(dark,(value)=>{document.documentElement.classList.toggle("dark",value);loc
 watch(()=>auth.isAuthenticated,(authenticated)=>{if(!authenticated&&route.meta.requiresAuth)void router.replace({path:"/login",query:{redirect:route.fullPath}});});
 onMounted(()=>window.addEventListener("keydown",handleShortcut));
 onBeforeUnmount(()=>window.removeEventListener("keydown",handleShortcut));
-async function signOut(){await auth.logout();}
+async function signOut(){accountMenuOpen.value=false;await auth.logout();}
 </script>
 <template>
   <div
@@ -115,13 +115,44 @@ async function signOut(){await auth.logout();}
           v-if="auth.user"
           class="user-menu"
         >
-          <span class="avatar">{{ initials }}</span><span class="user-name"><strong style="display:block;font-size:13px">{{ auth.user.name }}</strong><small class="muted">{{ auth.user.roles[0] }}</small></span><button
-            class="btn btn-secondary"
-            aria-label="Log out"
-            @click="signOut"
-          >
-            <LogOut :size="16" />
-          </button>
+          <span class="avatar">{{ initials }}</span>
+          <span class="user-name">
+            <strong style="display:block;font-size:13px">{{ auth.user.name }}</strong>
+            <small class="muted">{{ auth.user.roles[0] }}</small>
+          </span>
+          <div class="account-menu">
+            <button
+              class="btn btn-secondary"
+              type="button"
+              aria-label="Account menu"
+              :aria-expanded="accountMenuOpen"
+              @click="accountMenuOpen=!accountMenuOpen"
+            >
+              <ChevronDown :size="16" />
+            </button>
+            <div
+              v-if="accountMenuOpen"
+              class="account-menu-panel"
+              role="menu"
+            >
+              <RouterLink
+                to="/settings"
+                class="account-menu-item"
+                role="menuitem"
+                @click="accountMenuOpen=false"
+              >
+                Settings
+              </RouterLink>
+              <button
+                class="account-menu-item"
+                type="button"
+                role="menuitem"
+                @click="signOut"
+              >
+                Log out
+              </button>
+            </div>
+          </div>
         </div>
       </header><main class="page-content">
         <div
