@@ -44,13 +44,120 @@ const day=(date:Date)=>new Intl.DateTimeFormat("en-US",{day:"2-digit",month:"sho
 const dateRange=day(start)+" – "+day(end)+" "+end.getFullYear();
 const projectLegend=[["100+","#7a0002"],["50–100","#c10003"],["20–50","#e2434b"],["5–20","#f0989c"],["1–5","#fbd9da"],["0","#f1f5f9"]];
 </script>
-<template><div>
- <div class="toolbar" style="margin-top:0"><div><h1 class="page-title">Dashboard</h1><p class="muted">Visualize project insights across India</p></div><div style="display:flex;gap:8px;align-items:center"><select aria-label="Region filter" class="filter-select"><option>All India</option></select><span class="pill">{{dateRange}}</span></div></div>
- <div class="grid grid-3" style="margin-bottom:20px"><div class="card"><span class="muted">Total Projects</span><div class="stat-value">{{totalProjects.toLocaleString("en-US")}}</div><small class="muted">Across states and districts</small></div><div class="card"><span class="muted">Active Users</span><div class="stat-value">{{activeUsers.toLocaleString("en-US")}}</div><small class="muted">Illustrative overview metric</small></div><div class="card"><span class="muted">Total Requests</span><div class="stat-value">{{totalRequests.toLocaleString("en-US")}}</div><small class="muted">Illustrative overview metric</small></div></div>
- <p v-if="mapError" class="error">{{mapError}}</p>
- <div class="grid grid-2">
-  <section class="card"><div class="toolbar" style="margin:0 0 12px"><div><h2 style="margin:0 0 4px;font-size:16px">India Map – Project Distribution</h2><p class="muted" style="margin:0">Project distribution by state and district</p></div><select aria-label="State filter" class="filter-select"><option>All States</option></select></div><div ref="mapOne" class="map"></div><div class="legend-row"><span v-for="item in projectLegend" :key="item[0]"><i :style="{background:item[1]}"></i>{{item[0]}}</span></div><p class="muted" style="margin-top:8px">Darker red indicates a higher project count.</p></section>
-  <section class="card"><div class="toolbar" style="margin:0 0 12px"><div><h2 style="margin:0 0 4px;font-size:16px">India Map – Activity Intensity</h2><p class="muted" style="margin:0">Activity intensity heatmap</p></div><select aria-label="State filter" class="filter-select"><option>All States</option></select></div><div ref="mapTwo" class="map"></div><div class="heat-legend"><span>Low</span><i></i><span>High</span></div><p class="muted" style="margin-top:8px">Blue indicates lower intensity; red indicates higher intensity.</p></section>
- </div>
-</div></template>
+<template>
+  <div>
+    <div
+      class="toolbar"
+      style="margin-top:0"
+    >
+      <div>
+        <h1 class="page-title">
+          Dashboard
+        </h1><p class="muted">
+          Visualize project insights across India
+        </p>
+      </div><div style="display:flex;gap:8px;align-items:center">
+        <select
+          aria-label="Region filter"
+          class="filter-select"
+        >
+          <option>All India</option>
+        </select><span class="pill">{{ dateRange }}</span>
+      </div>
+    </div>
+    <div
+      class="grid grid-3"
+      style="margin-bottom:20px"
+    >
+      <div class="card">
+        <span class="muted">Total Projects</span><div class="stat-value">
+          {{ totalProjects.toLocaleString("en-US") }}
+        </div><small class="muted">Across states and districts</small>
+      </div><div class="card">
+        <span class="muted">Active Users</span><div class="stat-value">
+          {{ activeUsers.toLocaleString("en-US") }}
+        </div><small class="muted">Illustrative overview metric</small>
+      </div><div class="card">
+        <span class="muted">Total Requests</span><div class="stat-value">
+          {{ totalRequests.toLocaleString("en-US") }}
+        </div><small class="muted">Illustrative overview metric</small>
+      </div>
+    </div>
+    <p
+      v-if="mapError"
+      class="error"
+    >
+      {{ mapError }}
+    </p>
+    <div class="grid grid-2">
+      <section class="card">
+        <div
+          class="toolbar"
+          style="margin:0 0 12px"
+        >
+          <div>
+            <h2 style="margin:0 0 4px;font-size:16px">
+              India Map – Project Distribution
+            </h2><p
+              class="muted"
+              style="margin:0"
+            >
+              Project distribution by state and district
+            </p>
+          </div><select
+            aria-label="State filter"
+            class="filter-select"
+          >
+            <option>All States</option>
+          </select>
+        </div><div
+          ref="mapOne"
+          class="map"
+        /><div class="legend-row">
+          <span
+            v-for="item in projectLegend"
+            :key="item[0]"
+          ><i :style="{background:item[1]}" />{{ item[0] }}</span>
+        </div><p
+          class="muted"
+          style="margin-top:8px"
+        >
+          Darker red indicates a higher project count.
+        </p>
+      </section>
+      <section class="card">
+        <div
+          class="toolbar"
+          style="margin:0 0 12px"
+        >
+          <div>
+            <h2 style="margin:0 0 4px;font-size:16px">
+              India Map – Activity Intensity
+            </h2><p
+              class="muted"
+              style="margin:0"
+            >
+              Activity intensity heatmap
+            </p>
+          </div><select
+            aria-label="State filter"
+            class="filter-select"
+          >
+            <option>All States</option>
+          </select>
+        </div><div
+          ref="mapTwo"
+          class="map"
+        /><div class="heat-legend">
+          <span>Low</span><i /><span>High</span>
+        </div><p
+          class="muted"
+          style="margin-top:8px"
+        >
+          Blue indicates lower intensity; red indicates higher intensity.
+        </p>
+      </section>
+    </div>
+  </div>
+</template>
 <style scoped>.filter-select{padding:7px 9px;border:1px solid #cbd5e1;border-radius:7px;background:white;font-size:12px}.legend-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.legend-row span{display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b}.legend-row i{width:10px;height:10px;border-radius:2px}.heat-legend{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:10px;color:#64748b}.heat-legend i{height:9px;flex:1;border-radius:5px;background:linear-gradient(to right,#2563eb,#22d3ee,#4ade80,#facc15,#ef4444)}</style>
