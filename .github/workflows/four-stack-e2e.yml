@@ -64,6 +64,7 @@ jobs:
           SEED_ADMIN_EMAIL=e2e-admin@example.com
           SEED_ADMIN_PASSWORD=e2e-admin-password
           SEED_ADMIN_NAME=E2E Admin
+          GLOBAL_RATE_LIMIT_MAX=1000
           FRONTEND_BUILD_CONTEXT=../../front-end/${FRONTEND}
           EOF
 
