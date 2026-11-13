@@ -16,8 +16,8 @@ const totalProjects=computed(()=>metrics.value.reduce((sum,item)=>sum+item.proje
 const maxActivity=computed(()=>Math.max(1,...metrics.value.map(item=>item.activityIntensity)));
 const mapOne=ref<HTMLElement|null>(null),mapTwo=ref<HTMLElement|null>(null);
 let projectMap:L.Map|undefined,activityMap:L.Map|undefined;
-const mapsReady=computed(()=>queries.value.length===3&&queries.value.every(q=>q.isSuccess.value));
-const mapError=computed(()=>queries.value.some(q=>q.isError.value)?"Failed to load dashboard map data.":"");
+const mapsReady=computed(()=>queries.value.length===3&&queries.value.every(q=>q.isSuccess));
+const mapError=computed(()=>queries.value.some(q=>q.isError)?"Failed to load dashboard map data.":"");
 const mapsDrawn=ref(false);
 function drawMap(target:HTMLElement,kind:"projects"|"activity"){
  const map=L.map(target,{scrollWheelZoom:false}).setView([22.97,78.65],4);
