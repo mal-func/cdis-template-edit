@@ -44,7 +44,7 @@ export function createApp() {
   app.use(
     rateLimit({
       windowMs: 15 * 60 * 1000,
-      limit: 100,
+      limit: env.globalRateLimitMax,
       standardHeaders: true,
       legacyHeaders: false,
     }),
