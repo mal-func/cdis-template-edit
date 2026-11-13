@@ -3,7 +3,7 @@ import asyncio, os
 from uuid import uuid4
 from sqlalchemy import delete, select
 from app.database import SessionLocal
-from app.models import DemoChartDataset, DemoChartPoint, DemoStateMetric, DemoTableDataset, DemoTableRow, Permission, Role, User
+from app.models import DemoChartDataset, DemoChartPoint, DemoStateMetric, DemoTableDataset, DemoTableRow, Permission, Role, User, user_roles
 from app.security import hash_password
 ROLE_PERMISSIONS = {"admin":["users:read","users:write","roles:manage"],"manager":["users:read"],"user":[]}
 STATES = [("Mizoram","15"),("Tamil Nadu","33"),("Madhya Pradesh","23"),("Maharashtra","27"),("Chhattisgarh","22"),("Gujarat","24"),("Odisha","21"),("Andhra Pradesh","37"),("Karnataka","29"),("Goa","30"),("Kerala","32"),("Telangana","36"),("West Bengal","19"),("Puducherry","34"),("Arunachal Pradesh","12"),("Assam","18"),("Nagaland","13"),("Meghalaya","17"),("Manipur","14"),("Tripura","16"),("Uttar Pradesh","09"),("Rajasthan","08"),("Delhi","07"),("Haryana","06"),("Sikkim","11"),("Bihar","10"),("Jharkhand","20"),("Ladakh","38"),("Jammu and Kashmir","01"),("Himachal Pradesh","02"),("Punjab","03"),("Uttarakhand","05"),("Chandigarh","04"),("Lakshadweep","31"),("Andaman and Nicobar Islands","35"),("Dadra and Nagar Haveli and Daman and Diu","26")]
@@ -42,9 +42,31 @@ async def seed():
         email, password = os.getenv("SEED_ADMIN_EMAIL"), os.getenv("SEED_ADMIN_PASSWORD")
         if bool(email) != bool(password): raise RuntimeError("Set both SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD, or neither.")
         if email and password:
-            user = await db.scalar(select(User).where(User.email == email.lower(),User.deleted_at.is_(None)))
-            if user is None: user = User(id=str(uuid4()),email=email.lower(),name=os.getenv("SEED_ADMIN_NAME") or "Administrator",password_hash=hash_password(password)); db.add(user); await db.flush()
-            if role_map["admin"] not in user.roles: user.roles.append(role_map["admin"])
+            user = await db.scalar(select(User).where(User.email == email.lower(), User.deleted_at.is_(None)))
+            if user is None:
+                user = User(
+                    id=str(uuid4()),
+                    email=email.lower(),
+                    name=os.getenv("SEED_ADMIN_NAME") or "Administrator",
+                    password_hash=hash_password(password),
+                )
+                db.add(user)
+                await db.flush()
+
+            # Avoid accessing an unloaded async ORM relationship here.
+            # Query the join table directly so seed works for both new and
+            # existing users without triggering implicit async lazy loading.
+            admin_role_id = role_map["admin"].id
+            assigned_role_id = await db.scalar(
+                select(user_roles.c.roleId).where(
+                    user_roles.c.userId == user.id,
+                    user_roles.c.roleId == admin_role_id,
+                )
+            )
+            if assigned_role_id is None:
+                await db.execute(
+                    user_roles.insert().values(userId=user.id, roleId=admin_role_id)
+                )
         for i,(name,code) in enumerate(STATES):
             metric = await db.scalar(select(DemoStateMetric).where(DemoStateMetric.state_code == code))
             values = {"state_name":name,"project_count":i*17%151,"activity_intensity":i*29%101}
