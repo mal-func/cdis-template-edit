@@ -105,7 +105,7 @@ jobs:
       - name: Prepare test database
         working-directory: back-end/express
         run: |
-          mysql -h127.0.0.1 -P3308 -uroot -pcdis_root_dev_password < ../deployment/compose/mysql-init/01-test-database.sql
+          mysql -h127.0.0.1 -P3308 -uroot -pcdis_root_dev_password < ../../deployment/compose/mysql-init/01-test-database.sql
           npm run db:test:prepare
 
       #  lint 
@@ -188,12 +188,22 @@ jobs:
       - name: Dump container logs on failure
         if: failure()
         working-directory: deployment/compose
-        run: docker compose -f compose.yaml logs
+        run: |
+          if [ -f .env ]; then
+            docker compose -f compose.yaml logs
+          else
+            echo "Skipping Compose logs: deployment/compose/.env was not created because an earlier CI step failed."
+          fi
 
       - name: Tear down the stack
         if: always()
         working-directory: deployment/compose
-        run: docker compose -f compose.yaml down -v
+        run: |
+          if [ -f .env ]; then
+            docker compose -f compose.yaml down -v
+          else
+            echo "Skipping Compose teardown: deployment/compose/.env was not created."
+          fi
 
       # coverage 
       # Re-runs with coverage instrumentation so a coverage-threshold
