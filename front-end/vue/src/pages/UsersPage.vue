@@ -74,6 +74,7 @@ function close(){editing.value=null;save.reset();}
                 >You</span><button
                   v-else
                   class="btn btn-secondary"
+                  :aria-label="`Edit roles for ${user.name}`"
                   @click="openRoles(user)"
                 >
                   Edit roles
