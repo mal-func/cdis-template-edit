@@ -17,7 +17,17 @@ watch(dark,(value)=>{document.documentElement.classList.toggle("dark",value);loc
 watch(()=>auth.isAuthenticated,(authenticated)=>{if(!authenticated&&route.meta.requiresAuth)void router.replace({path:"/login",query:{redirect:route.fullPath}});});
 onMounted(()=>window.addEventListener("keydown",handleShortcut));
 onBeforeUnmount(()=>window.removeEventListener("keydown",handleShortcut));
-async function signOut(){accountMenuOpen.value=false;await auth.logout();}
+async function signOut(){
+  accountMenuOpen.value=false;
+  try {
+    await auth.logout();
+  } finally {
+    // Do not rely solely on the reactive auth watcher for this critical
+    // navigation: explicitly leave the protected route after local state
+    // is cleared, even if the logout request rejects.
+    await router.replace("/login");
+  }
+}
 </script>
 <template>
   <div
