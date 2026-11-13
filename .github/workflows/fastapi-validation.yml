@@ -47,7 +47,7 @@ jobs:
 
       - name: Verify database seed is idempotent
         env:
-          DATABASE_URL: "sqlite+aiosqlite:///./seed-smoke.db"
+          DATABASE_URL: "sqlite+aiosqlite:////tmp/cdis-seed-smoke.db"
           SEED_ADMIN_EMAIL: seed-admin@example.com
           SEED_ADMIN_PASSWORD: seed-admin-password
           SEED_ADMIN_NAME: Seed Admin
