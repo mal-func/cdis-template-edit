@@ -133,6 +133,15 @@ async function signOut(){accountMenuOpen.value=false;await auth.logout();}
               role="menu"
             >
               <RouterLink
+                v-if="hasPermission(auth.user, 'users:read')"
+                to="/users"
+                class="account-menu-item"
+                role="menuitem"
+                @click="accountMenuOpen=false"
+              >
+                Users
+              </RouterLink>
+              <RouterLink
                 to="/settings"
                 class="account-menu-item"
                 role="menuitem"
