@@ -74,7 +74,7 @@ jobs:
         working-directory: deployment
         env:
           CDIS_BACKEND: ${{ matrix.backend }}
-        run: ./scripts/e2e-up.sh
+        run: bash ./scripts/e2e-up.sh
 
       - name: Run shared browser tests
         working-directory: deployment
