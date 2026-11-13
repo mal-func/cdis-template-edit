@@ -101,7 +101,8 @@ export const env = {
    * proxy's IP (one rate-limit bucket for everyone); too high and a
    * client can spoof its IP via X-Forwarded-For.
    */
-  trustProxyHops: requireNonNegativeInt("TRUST_PROXY_HOPS"),\n  globalRateLimitMax: optionalPositiveInt("GLOBAL_RATE_LIMIT_MAX", 100),
+  trustProxyHops: requireNonNegativeInt("TRUST_PROXY_HOPS"),
+  globalRateLimitMax: optionalPositiveInt("GLOBAL_RATE_LIMIT_MAX", 100),
 
   auth: {
     jwtAccessSecret: requireEnv("JWT_ACCESS_SECRET"),
