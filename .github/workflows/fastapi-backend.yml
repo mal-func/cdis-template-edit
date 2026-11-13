@@ -26,8 +26,8 @@ jobs:
       DATABASE_URL: "sqlite+aiosqlite:///:memory:"
       NODE_ENV: test
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -85,4 +85,9 @@ jobs:
       - name: Tear down integration stack
         if: always()
         working-directory: .
-        run: docker compose --env-file deployment/compose/.env -f deployment/compose/compose.yaml -f deployment/compose/compose.fastapi.yaml down -v
+        run: |
+          if [ -f deployment/compose/.env ]; then
+            docker compose --env-file deployment/compose/.env -f deployment/compose/compose.yaml -f deployment/compose/compose.fastapi.yaml down -v
+          else
+            echo "Skipping Compose teardown: deployment/compose/.env was not created."
+          fi
