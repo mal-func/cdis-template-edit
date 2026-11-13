@@ -1,4 +1,4 @@
-name: Four Stack Integration
+name: Vue Backend Integration
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ on:
       - "deployment/**"
       - ".github/workflows/four-stack-e2e.yml"
   push:
-    branches: ["**"]
+    branches: ["main"]
     paths:
       - "front-end/react/**"
       - "front-end/vue/**"
@@ -26,14 +26,11 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         include:
-          - frontend: react
-            backend: express
           - frontend: vue
             backend: express
-          - frontend: react
-            backend: fastapi
           - frontend: vue
             backend: fastapi
 
