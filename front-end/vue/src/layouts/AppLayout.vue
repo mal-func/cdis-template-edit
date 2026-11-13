@@ -5,7 +5,7 @@ import { useAuthStore, hasPermission } from "@/auth/store";
 import { appConfig } from "@/config/env";
 import { LayoutDashboard, LineChart, ChartPie, Table2, Users, Menu, Bell, MoonStar, Search, ChevronDown } from "lucide-vue-next";
 const auth=useAuthStore(),route=useRoute(),router=useRouter();
-const collapsed=ref(false),mobileOpen=ref(false),accountMenuOpen=ref(false),dark=ref(typeof window==="undefined"||localStorage.getItem("cdis-shell-theme")!=="light");
+const collapsed=ref(false),mobileOpen=ref(false),accountMenuOpen=ref(false),isSigningOut=ref(false),dark=ref(typeof window==="undefined"||localStorage.getItem("cdis-shell-theme")!=="light");
 const searchQuery=ref(""),searchInput=ref<HTMLInputElement|null>(null);
 const nav=[{label:"Dashboard",to:"/dashboard",icon:LayoutDashboard},{label:"Graphs",to:"/graphs",icon:LineChart},{label:"Charts",to:"/charts",icon:ChartPie},{label:"Table",to:"/tables",icon:Table2}];
 const title=computed(()=>String(route.meta.title??"Dashboard"));
@@ -14,11 +14,12 @@ const searchResults=computed(()=>{const q=searchQuery.value.trim().toLowerCase()
 function handleShortcut(event:KeyboardEvent){if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==="k"){event.preventDefault();searchInput.value?.focus();}}
 function selectSearch(path:string){searchQuery.value="";void router.push(path);}
 watch(dark,(value)=>{document.documentElement.classList.toggle("dark",value);localStorage.setItem("cdis-shell-theme",value?"dark":"light");},{immediate:true});
-watch(()=>auth.isAuthenticated,(authenticated)=>{if(!authenticated&&route.meta.requiresAuth)void router.replace({path:"/login",query:{redirect:route.fullPath}});});
+watch(()=>auth.isAuthenticated,(authenticated)=>{if(!authenticated&&route.meta.requiresAuth&&!isSigningOut.value)void router.replace({path:"/login",query:{redirect:route.fullPath}});});
 onMounted(()=>window.addEventListener("keydown",handleShortcut));
 onBeforeUnmount(()=>window.removeEventListener("keydown",handleShortcut));
 async function signOut(){
   accountMenuOpen.value=false;
+  isSigningOut.value=true;
   try {
     await auth.logout();
   } finally {
