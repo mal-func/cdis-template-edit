@@ -33,17 +33,19 @@ jobs:
           else
             npm install --no-audit --no-fund --legacy-peer-deps
           fi
-      - name: Commit generated Vue lockfile (one-time bootstrap)
+      - name: Apply safe Vue lint auto-fixes
+        run: npx eslint . --fix
+      - name: Commit generated lockfile and safe lint fixes
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         working-directory: .
         env:
           HEAD_BRANCH: ${{ github.head_ref }}
         run: |
-          if [ -f front-end/vue/package-lock.json ] && [ -n "$(git status --porcelain -- front-end/vue/package-lock.json)" ]; then
+          if [ -n "$(git status --porcelain -- front-end/vue)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add front-end/vue/package-lock.json
-            git commit -m "chore(vue): add reproducible npm lockfile"
+            git add front-end/vue
+            git commit -m "chore(vue): apply lint fixes and lock dependencies"
             git push origin "HEAD:${HEAD_BRANCH}"
           fi
       - name: Verify clean Vue dependency install
