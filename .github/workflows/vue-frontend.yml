@@ -26,6 +26,9 @@ jobs:
           cache: npm
           cache-dependency-path: front-end/vue/package-lock.json
 
+      - name: Use the lockfile-generating npm major
+        run: npm install --global npm@11
+
       - name: Install Vue dependencies
         run: npm ci
 
