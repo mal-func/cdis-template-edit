@@ -70,10 +70,10 @@ test.describe("Logout", () => {
     await page.getByRole("button", { name: "Account menu" }).click();
     await page.getByText("Log out").click();
 
-    await page.waitForURL("**/login");
+    await expect(page).toHaveURL(/\/login(?:\?.*)?$/);
 
     // The session is actually gone server-side, not just hidden client-side.
     await page.goto("/dashboard");
-    await page.waitForURL("**/login");
+    await expect(page).toHaveURL(/\/login(?:\?.*)?$/);
   });
 });
