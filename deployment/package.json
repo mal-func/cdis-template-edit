@@ -5,10 +5,13 @@
   "description": "Deployment topology, reverse proxy, and end-to-end tests for the CDIS Engineering Template.",
   "scripts": {
     "test:e2e": "playwright test",
-    "e2e:up": "./scripts/e2e-up.sh"
+    "e2e:up": "bash ./scripts/e2e-up.sh"
   },
   "license": "ISC",
   "devDependencies": {
     "@playwright/test": "^1.62.1"
+  },
+  "allowScripts": {
+    "fsevents@2.3.2": true
   }
 }

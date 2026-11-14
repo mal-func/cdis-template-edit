@@ -1,30 +1,49 @@
 name: Vue Frontend
+
 on:
   pull_request:
     paths:
       - "front-end/vue/**"
       - ".github/workflows/vue-frontend.yml"
   push:
-    branches: [main]
+    branches: ["main"]
     paths:
       - "front-end/vue/**"
       - ".github/workflows/vue-frontend.yml"
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+    env:
+      VITE_APP_NAME: CDIS
+      VITE_APP_ENV: testing
+      VITE_API_BASE_URL: /api/v1
     defaults:
       run:
         working-directory: front-end/vue
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
         with:
-          node-version: 22
-      - run: npm install
-      - run: npm run lint
-      - run: npm test
-      - run: npm run build
-        env:
-          VITE_APP_NAME: CDIS
-          VITE_APP_ENV: testing
-          VITE_API_BASE_URL: /api/v1
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: front-end/vue/package-lock.json
+
+      - name: Use the lockfile-generating npm major
+        run: npm install --global npm@11
+
+      - name: Install Vue dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
