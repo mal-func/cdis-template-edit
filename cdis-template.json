@@ -37,6 +37,10 @@
       "default": false
     }
   ],
+  "compatibility": {
+    "react": ["express", "fastapi"],
+    "vue": ["express", "fastapi"]
+  },
   "files": {
     "exclude": [
       ".git",
