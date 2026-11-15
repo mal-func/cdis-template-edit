@@ -17,168 +17,36 @@ watch(dark,(value)=>{document.documentElement.classList.toggle("dark",value);loc
 watch(()=>auth.isAuthenticated,(authenticated)=>{if(!authenticated&&route.meta.requiresAuth&&!isSigningOut.value)void router.replace({path:"/login",query:{redirect:route.fullPath}});});
 onMounted(()=>window.addEventListener("keydown",handleShortcut));
 onBeforeUnmount(()=>window.removeEventListener("keydown",handleShortcut));
-async function signOut(){
-  accountMenuOpen.value=false;
-  isSigningOut.value=true;
-  try {
-    await auth.logout();
-  } finally {
-    // Do not rely solely on the reactive auth watcher for this critical
-    // navigation: explicitly leave the protected route after local state
-    // is cleared, even if the logout request rejects.
-    await router.replace("/login");
-  }
-}
+async function signOut(){accountMenuOpen.value=false;isSigningOut.value=true;try{await auth.logout();}finally{await router.replace("/login");}}
 </script>
 <template>
-  <div
-    class="app-shell"
-    :class="{dark}"
-  >
-    <aside
-      class="sidebar"
-      :class="{collapsed,mobileOpen}"
-    >
-      <div class="brand">
-        <span class="brand-mark"><img
-          src="/cdis_logo.png"
-          :alt="appConfig.name"
-        ></span><span v-if="!collapsed">{{ appConfig.name }}<small style="display:block;color:#94a3b8;font-size:10px;letter-spacing:2px">DASHBOARD</small></span>
-      </div>
-      <nav class="nav-list">
-        <RouterLink
-          v-for="item in nav"
-          :key="item.to"
-          :to="item.to"
-          class="nav-link"
-          @click="mobileOpen=false"
-        ><component
-          :is="item.icon"
-          :size="18"
-        /><span v-if="!collapsed">{{ item.label }}</span></RouterLink><RouterLink
-          v-if="hasPermission(auth.user,'users:read')"
-          to="/users"
-          class="nav-link"
-          @click="mobileOpen=false"
-        ><Users :size="18" /><span v-if="!collapsed">Users</span></RouterLink>
+  <div class="app-shell" :class="{dark}">
+    <aside class="sidebar" :class="{collapsed,mobileOpen}">
+      <div class="brand"><span class="brand-mark"><img src="/cdis_logo.png" :alt="appConfig.name"></span><span v-if="!collapsed"><strong>{{ appConfig.name }}</strong><small style="display:block;color:#94a3b8;font-size:10px;letter-spacing:2px">DASHBOARD</small></span></div>
+      <nav class="nav-list" aria-label="Main navigation">
+        <RouterLink v-for="item in nav" :key="item.to" :to="item.to" class="nav-link" :title="collapsed?item.label:undefined" @click="mobileOpen=false"><component :is="item.icon" :size="17" /><span v-if="!collapsed">{{ item.label }}</span></RouterLink>
+        <RouterLink v-if="hasPermission(auth.user,'users:read')" to="/users" class="nav-link" :title="collapsed?'Users':undefined" @click="mobileOpen=false"><Users :size="17" /><span v-if="!collapsed">Users</span></RouterLink>
       </nav>
-      <div class="sidebar-bottom">
-        <button
-          v-if="!mobileOpen"
-          class="nav-link"
-          style="width:100%;border:0;background:transparent"
-          @click="collapsed=!collapsed"
-        >
-          <Menu :size="18" /><span v-if="!collapsed">Collapse</span>
-        </button>
-      </div>
+      <div class="sidebar-bottom"><button v-if="!mobileOpen" class="nav-link" style="width:100%" :aria-label="collapsed?'Expand sidebar':'Collapse sidebar'" @click="collapsed=!collapsed"><Menu :size="18" /><span v-if="!collapsed">Collapse</span></button></div>
     </aside>
-    <div
-      class="main-area"
-      :class="{collapsed}"
-    >
+    <div class="main-area" :class="{collapsed}">
       <header class="topbar">
-        <button
-          class="btn btn-secondary mobile-menu"
-          @click="mobileOpen=!mobileOpen"
-        >
-          <Menu :size="17" />
-        </button>
-        <div class="nav-search">
-          <Search :size="16" /><input
-            ref="searchInput"
-            v-model="searchQuery"
-            type="search"
-            placeholder="Search anything…"
-            aria-label="Search navigation"
-            @keydown.escape="searchQuery=''"
-          ><kbd>Ctrl K</kbd><div
-            v-if="searchResults.length"
-            class="search-results"
-          >
-            <button
-              v-for="item in searchResults"
-              :key="item.to"
-              @click="selectSearch(item.to)"
-            >
-              {{ item.label }}
-            </button>
-          </div>
+        <button class="btn btn-secondary mobile-menu" aria-label="Open navigation menu" @click="mobileOpen=!mobileOpen"><Menu :size="18" /></button>
+        <div class="nav-search"><Search :size="16" /><input ref="searchInput" v-model="searchQuery" type="search" placeholder="Search anything…" aria-label="Search navigation" @keydown.escape="searchQuery=''"><kbd>Ctrl K</kbd><div v-if="searchResults.length" class="search-results"><button v-for="item in searchResults" :key="item.to" @click="selectSearch(item.to)">{{ item.label }}</button></div></div>
+        <button class="btn btn-secondary" aria-label="Notifications" title="No notifications yet"><Bell :size="17" /></button>
+        <button class="btn btn-secondary" aria-label="Toggle theme" @click="dark=!dark"><MoonStar :size="17" /></button>
+        <div v-if="auth.user" class="user-menu">
+          <span class="avatar">{{ initials }}</span><span class="user-name"><strong style="display:block;font-size:13px">{{ auth.user.name }}</strong><small class="muted">{{ auth.user.roles[0] }}</small></span>
+          <div class="account-menu"><button class="btn btn-secondary" type="button" aria-label="Account menu" :aria-expanded="accountMenuOpen" @click="accountMenuOpen=!accountMenuOpen"><ChevronDown :size="16" /></button><div v-if="accountMenuOpen" class="account-menu-panel" role="menu">
+            <RouterLink v-if="hasPermission(auth.user,'users:read')" to="/users" class="account-menu-item" role="menuitem" @click="accountMenuOpen=false">Users</RouterLink>
+            <RouterLink to="/settings" class="account-menu-item" role="menuitem" @click="accountMenuOpen=false">Settings</RouterLink>
+            <button class="account-menu-item" type="button" role="menuitem" @click="signOut">Log out</button>
+          </div></div>
         </div>
-        <button
-          class="btn btn-secondary"
-          aria-label="Notifications"
-          title="No notifications yet"
-        >
-          <Bell :size="17" />
-        </button>
-        <button
-          class="btn btn-secondary"
-          aria-label="Toggle theme"
-          @click="dark=!dark"
-        >
-          <MoonStar :size="17" />
-        </button>
-        <div
-          v-if="auth.user"
-          class="user-menu"
-        >
-          <span class="avatar">{{ initials }}</span>
-          <span class="user-name">
-            <strong style="display:block;font-size:13px">{{ auth.user.name }}</strong>
-            <small class="muted">{{ auth.user.roles[0] }}</small>
-          </span>
-          <div class="account-menu">
-            <button
-              class="btn btn-secondary"
-              type="button"
-              aria-label="Account menu"
-              :aria-expanded="accountMenuOpen"
-              @click="accountMenuOpen=!accountMenuOpen"
-            >
-              <ChevronDown :size="16" />
-            </button>
-            <div
-              v-if="accountMenuOpen"
-              class="account-menu-panel"
-              role="menu"
-            >
-              <RouterLink
-                v-if="hasPermission(auth.user, 'users:read')"
-                to="/users"
-                class="account-menu-item"
-                role="menuitem"
-                @click="accountMenuOpen=false"
-              >
-                Users
-              </RouterLink>
-              <RouterLink
-                to="/settings"
-                class="account-menu-item"
-                role="menuitem"
-                @click="accountMenuOpen=false"
-              >
-                Settings
-              </RouterLink>
-              <button
-                class="account-menu-item"
-                type="button"
-                role="menuitem"
-                @click="signOut"
-              >
-                Log out
-              </button>
-            </div>
-          </div>
-        </div>
-      </header><main class="page-content">
-        <div
-          v-if="route.path!=='/dashboard'"
-          class="muted"
-          style="margin-bottom:16px"
-        >
-          Dashboard / {{ title }}
-        </div><RouterView />
+      </header>
+      <main class="page-content">
+        <div v-if="route.path!=='/dashboard'" class="mb-4 text-sm text-slate-500" aria-label="Breadcrumb">Dashboard <span class="mx-1 text-slate-300">/</span> {{ title }}</div>
+        <RouterView />
       </main>
     </div>
   </div>
