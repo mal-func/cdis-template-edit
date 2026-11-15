@@ -45,7 +45,7 @@ async function signOut(){accountMenuOpen.value=false;isSigningOut.value=true;try
         </div>
       </header>
       <main class="page-content">
-        <div v-if="route.path!=='/dashboard'" class="mb-4 text-sm text-slate-500" aria-label="Breadcrumb">Dashboard <span class="mx-1 text-slate-300">/</span> {{ title }}</div>
+        <div v-if="route.path!=='/dashboard'" class="breadcrumb" aria-label="Breadcrumb">Dashboard <span>/</span> {{ title }}</div>
         <RouterView />
       </main>
     </div>
