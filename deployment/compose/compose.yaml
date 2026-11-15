@@ -48,6 +48,7 @@ services:
       ACCOUNT_LOCKOUT_DURATION_MINUTES: 15
       # Exactly one hop: the Apache reverse-proxy container below.
       TRUST_PROXY_HOPS: 1
+      GLOBAL_RATE_LIMIT_MAX: ${GLOBAL_RATE_LIMIT_MAX:-100}
       # On: the E2E suite registers its own throwaway users.
       ALLOW_SELF_REGISTRATION: "true"
     depends_on:

@@ -17,11 +17,60 @@ async function submit(){
  finally{busy.value=false;}
 }
 </script>
-<template><div class="auth-page"><form class="auth-card" @submit.prevent="submit">
-  <h1>Welcome back</h1><p class="muted" style="margin-bottom:24px">Sign in to your CDIS workspace</p>
-  <div class="field"><label for="email">Email</label><input id="email" v-model="values.email" type="email" autocomplete="username" required/><span class="error">{{errors.email}}</span></div>
-  <div class="field"><label for="password">Password</label><input id="password" v-model="values.password" type="password" autocomplete="current-password" required/><span class="error">{{errors.password}}</span></div>
-  <p v-if="serverError" class="error" role="alert">{{serverError}}</p>
-  <button class="btn" style="width:100%" :disabled="busy">{{busy?"Signing in…":"Sign in"}}</button>
-  <p v-if="auth.authOptions?.selfRegistration" class="muted" style="text-align:center;margin-top:20px">Don't have an account? <RouterLink to="/register" style="text-decoration:underline;color:#0f172a">Create one</RouterLink></p>
-</form></div></template>
+<template>
+  <div class="auth-page">
+    <form
+      class="auth-card"
+      @submit.prevent="submit"
+    >
+      <h1>Welcome back</h1><p
+        class="muted"
+        style="margin-bottom:24px"
+      >
+        Sign in to your CDIS workspace
+      </p>
+      <div class="field">
+        <label for="email">Email address</label><input
+          id="email"
+          v-model="values.email"
+          type="email"
+          autocomplete="username"
+          required
+        ><span class="error">{{ errors.email }}</span>
+      </div>
+      <div class="field">
+        <label for="password">Password</label><input
+          id="password"
+          v-model="values.password"
+          type="password"
+          autocomplete="current-password"
+          required
+        ><span class="error">{{ errors.password }}</span>
+      </div>
+      <p
+        v-if="serverError"
+        class="error"
+        role="alert"
+      >
+        {{ serverError }}
+      </p>
+      <button
+        class="btn"
+        style="width:100%"
+        :disabled="busy"
+      >
+        {{ busy?"Signing in…":"Sign In" }}
+      </button>
+      <p
+        v-if="auth.authOptions?.selfRegistration"
+        class="muted"
+        style="text-align:center;margin-top:20px"
+      >
+        Don't have an account? <RouterLink
+          to="/register"
+          style="text-decoration:underline;color:#0f172a"
+        >Create one</RouterLink>
+      </p>
+    </form>
+  </div>
+</template>

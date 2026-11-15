@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 from secrets import token_hex
-from uuid import uuid4
 import bcrypt
 import jwt
 from app.config import settings

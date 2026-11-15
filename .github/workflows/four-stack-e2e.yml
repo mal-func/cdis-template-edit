@@ -1,0 +1,115 @@
+name: Vue Backend Integration
+
+on:
+  pull_request:
+    paths:
+      - "front-end/react/**"
+      - "front-end/vue/**"
+      - "back-end/express/**"
+      - "back-end/fastapi/**"
+      - "deployment/**"
+      - ".github/workflows/four-stack-e2e.yml"
+  push:
+    branches: ["main"]
+    paths:
+      - "front-end/react/**"
+      - "front-end/vue/**"
+      - "back-end/express/**"
+      - "back-end/fastapi/**"
+      - "deployment/**"
+      - ".github/workflows/four-stack-e2e.yml"
+
+jobs:
+  e2e:
+    name: ${{ matrix.frontend }} + ${{ matrix.backend }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - frontend: vue
+            backend: express
+          - frontend: vue
+            backend: fastapi
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: deployment/package-lock.json
+
+      - name: Install Playwright dependencies
+        working-directory: deployment
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Create isolated integration environment
+        working-directory: .
+        env:
+          FRONTEND: ${{ matrix.frontend }}
+        run: |
+          cat > deployment/compose/.env <<EOF
+          DB_PASSWORD=cdis_ci_password
+          DB_ROOT_PASSWORD=cdis_ci_root_password
+          JWT_ACCESS_SECRET=ci-secret-that-is-long-enough-for-integration-tests
+          PUBLIC_ORIGIN=http://localhost:8080
+          SEED_ADMIN_EMAIL=e2e-admin@example.com
+          SEED_ADMIN_PASSWORD=e2e-admin-password
+          SEED_ADMIN_NAME=E2E Admin
+          GLOBAL_RATE_LIMIT_MAX=1000
+          FRONTEND_BUILD_CONTEXT=../../front-end/${FRONTEND}
+          EOF
+
+      - name: Build and start selected stack
+        working-directory: deployment
+        env:
+          CDIS_BACKEND: ${{ matrix.backend }}
+        run: bash ./scripts/e2e-up.sh
+
+      - name: Run shared browser tests
+        working-directory: deployment
+        env:
+          E2E_BASE_URL: http://localhost:8080
+          E2E_ADMIN_EMAIL: e2e-admin@example.com
+          E2E_ADMIN_PASSWORD: e2e-admin-password
+        run: npm run test:e2e
+
+      - name: Dump selected stack logs on failure
+        if: failure()
+        working-directory: .
+        env:
+          BACKEND: ${{ matrix.backend }}
+        run: |
+          if [ -f deployment/compose/.env ]; then
+            if [ "$BACKEND" = "fastapi" ]; then
+              docker compose --env-file deployment/compose/.env -f deployment/compose/compose.yaml -f deployment/compose/compose.fastapi.yaml logs
+            else
+              docker compose --env-file deployment/compose/.env -f deployment/compose/compose.yaml logs
+            fi
+          else
+            echo "Compose environment was not created; no container logs are available."
+          fi
+
+      - name: Tear down selected stack
+        if: always()
+        working-directory: .
+        env:
+          BACKEND: ${{ matrix.backend }}
+        run: |
+          if [ -f deployment/compose/.env ]; then
+            if [ "$BACKEND" = "fastapi" ]; then
+              docker compose --env-file deployment/compose/.env -f deployment/compose/compose.yaml -f deployment/compose/compose.fastapi.yaml down -v
+            else
+              docker compose --env-file deployment/compose/.env -f deployment/compose/compose.yaml down -v
+            fi
+          else
+            echo "Compose environment was not created; skipping teardown."
+          fi

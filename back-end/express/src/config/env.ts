@@ -48,6 +48,16 @@ function requirePositiveInt(name: string): number {
   return parsed;
 }
 
+function optionalPositiveInt(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined) return fallback;
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`[Configuration Error] Invalid ${name}: "${raw}" must be a positive integer`);
+  }
+  return parsed;
+}
+
 function requireNonNegativeInt(name: string): number {
   const raw = requireEnv(name);
   const parsed = Number(raw);
@@ -92,6 +102,7 @@ export const env = {
    * client can spoof its IP via X-Forwarded-For.
    */
   trustProxyHops: requireNonNegativeInt("TRUST_PROXY_HOPS"),
+  globalRateLimitMax: optionalPositiveInt("GLOBAL_RATE_LIMIT_MAX", 100),
 
   auth: {
     jwtAccessSecret: requireEnv("JWT_ACCESS_SECRET"),
