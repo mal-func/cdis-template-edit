@@ -43,6 +43,12 @@ To run the Compose stack with FastAPI instead of Express, combine the base file 
 
 The CLI reads `cdis-template.json` to select frontend/backend directories and shared components. `files.include` declares additional root-level files (currently `.gitignore`) that generated projects need. The compatibility map remains optional until the maintainers have verified and agreed which frontend/backend combinations are supported.
 
+## Using this repository with the CDIS CLI
+
+The CLI uses this repository as its default template source. Its source repository and default branch are configurable in the CLI through the `CDIS_TEMPLATE_REPOSITORY` and `CDIS_TEMPLATE_BRANCH` environment variables. This lets maintainers point the CLI at a transferred repository or a fork without changing the template manifest or scattering repository URLs through the CLI code.
+
+The CLI continues to support both branch-based generation and published Git tags. With no explicit ref option, it uses the configured default branch; `--version <tag>` selects a published template tag.
+
 ## Validation
 React/Express use the existing CI workflow. Vue and FastAPI have separate validation workflows. Passing unit/build workflows is not by itself proof of cross-backend browser E2E parity; run the shared E2E suite against both backend choices before production use.
 
