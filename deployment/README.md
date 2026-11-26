@@ -34,7 +34,9 @@ compose/
 ├── mysql-init/                creates the cdis_test database on the dev MySQL's first start
 ├── compose.yaml               local full stack — builds React + Express by default
 ├── compose.fastapi.yaml       overlay to select the FastAPI backend
-├── compose.production.yaml    production — pulls pinned images by commit SHA
+├── compose.production.yaml    production — pulls pinned React/Express images by commit SHA
+├── compose.production.vue.yaml     production Vue frontend overlay
+├── compose.production.fastapi.yaml production FastAPI backend + Alembic overlay
 ├── compose.https-init.yaml    HTTPS bootstrap overlay (certificate issuance)
 └── compose.https.yaml         steady-state HTTPS overlay
 
@@ -102,7 +104,8 @@ Fill in real values:
 |---|---|
 | `PUBLIC_ORIGIN` | e.g. `https://app.example.com` |
 | `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `JWT_ACCESS_SECRET` | long random values, unique to this server |
-| `FRONTEND_IMAGE`, `BACKEND_IMAGE` | image repositories without a tag — the monorepo CI's `publish` job prints them (e.g. `ghcr.io/<owner>/<repo>-backend`) |
+| `FRONTEND_IMAGE`, `BACKEND_IMAGE` | React and Express image repositories without a tag — the monorepo CI prints them |
+| `FRONTEND_IMAGE_VUE`, `BACKEND_IMAGE_FASTAPI` | Vue and FastAPI image repositories without a tag — required only for those stack choices |
 | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | creates your first admin on the first deploy; safe to leave in (never changes an existing password) or delete afterwards |
 | `ALLOW_SELF_REGISTRATION` | optional, default `false` — with it off, the seeded admin is currently the only way to get an account |
 | `HTTP_PORT` | optional, default `80` |
@@ -114,11 +117,11 @@ If the images are private (GHCR's default), log the server in once: `docker logi
 ## Deploying and rolling back
 
 ```bash
-./scripts/deploy.sh <frontend-version> <backend-version>
-# e.g. ./scripts/deploy.sh 22fdf43... 22fdf43...   (monorepo: the same commit SHA for both)
+./scripts/deploy.sh <frontend-version> <backend-version> [react|vue] [express|fastapi]
+# e.g. ./scripts/deploy.sh 22fdf43... 22fdf43... vue fastapi
 ```
 
-It:
+It selects the production overlays for the requested frontend/backend, then:
 
 1. pulls both images;
 2. runs the new backend image's `migrate` job — migrations, then the seed. **If this fails, it stops: the old version keeps serving and nothing is recorded;**

@@ -41,8 +41,19 @@ To run the Compose stack with FastAPI instead of Express, combine the base file 
 - `express` → `back-end/express` (default backend)
 - `fastapi` → `back-end/fastapi`
 
-The CLI reads `cdis-template.json` to select frontend/backend directories and shared components. `files.include` declares additional root-level files (currently `.gitignore`) that generated projects need. The compatibility map remains optional until the maintainers have verified and agreed which frontend/backend combinations are supported.
+The CLI reads `cdis-template.json` to select frontend/backend directories, shared components and developer tooling. `files.include` also includes the generated-project CI workflow. The compatibility map declares the frontend/backend combinations validated by maintainers.
 
+### Linter and formatter choices
+
+- React, Vue and Express support **ESLint or Biome**. ESLint is the default; the CLI prompts when no explicit choice is supplied.
+- FastAPI uses **Ruff** as its single declared linter, so there is no redundant linter prompt.
+- Biome's Vue single-file-component support is experimental; the CLI labels that option accordingly.
+- Prettier and Ruff formatting are optional additions. They do not replace linting and are disabled unless selected.
+- The manifest is the source of truth for supported options and defaults.
+
+### Generated-project CI
+
+The manifest includes `.github/workflows/cdis-generated.yml`. The CLI copies this workflow into newly generated projects so CI validates the selected frontend and backend layout. The template repository's monorepo workflows are not copied into generated projects.
 ## Using this repository with the CDIS CLI
 
 The CLI uses this repository as its default template source. Its source repository and default branch are configurable in the CLI through the `CDIS_TEMPLATE_REPOSITORY` and `CDIS_TEMPLATE_BRANCH` environment variables. This lets maintainers point the CLI at a transferred repository or a fork without changing the template manifest or scattering repository URLs through the CLI code.

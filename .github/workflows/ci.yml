@@ -239,6 +239,10 @@ jobs:
   validate-additional-stacks:
     name: Validate Vue and FastAPI implementations
     runs-on: ubuntu-latest
+    env:
+      JWT_ACCESS_SECRET: test-secret-that-is-long-enough-for-cdis
+      DATABASE_URL: sqlite+aiosqlite:///:memory:
+      NODE_ENV: test
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -246,9 +250,11 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: front-end/vue/package-lock.json
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+          cache: pip
+          cache-dependency-path: back-end/fastapi/pyproject.toml
       - name: Install Vue dependencies
         working-directory: front-end/vue
         run: npm ci
@@ -267,9 +273,23 @@ jobs:
       - name: Lint FastAPI backend
         working-directory: back-end/fastapi
         run: ruff check .
+      - name: Apply FastAPI migrations
+        working-directory: back-end/fastapi
+        run: alembic upgrade head
       - name: Test FastAPI backend
         working-directory: back-end/fastapi
-        run: pytest
+        run: pytest -q
+      - name: Verify FastAPI seed is idempotent
+        working-directory: back-end/fastapi
+        env:
+          DATABASE_URL: sqlite+aiosqlite:////tmp/cdis-seed-smoke.db
+          SEED_ADMIN_EMAIL: seed-admin@example.com
+          SEED_ADMIN_PASSWORD: seed-admin-password
+          SEED_ADMIN_NAME: Seed Admin
+        run: |
+          alembic upgrade head
+          python -m app.seed
+          python -m app.seed
 
   publish:
     needs: [ci, validate-additional-stacks]
