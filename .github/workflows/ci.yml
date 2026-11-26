@@ -40,7 +40,8 @@ jobs:
           docker compose --env-file .env.production -f compose.production.yaml -f compose.production.vue.yaml config --quiet
           docker compose --env-file .env.production -f compose.production.yaml -f compose.production.fastapi.yaml config --quiet
           docker compose --env-file .env.production -f compose.production.yaml -f compose.production.vue.yaml -f compose.production.fastapi.yaml config --quiet
-          bash -n ../scripts/deploy.sh ../scripts/rollback.sh
+          bash -n ../scripts/deploy.sh
+          bash -n ../scripts/rollback.sh
 
       - uses: actions/setup-node@v5
         with:
