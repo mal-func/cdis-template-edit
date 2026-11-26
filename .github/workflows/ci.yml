@@ -31,6 +31,17 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Validate production Compose overlays and deploy scripts
+        run: |
+          cp deployment/env/production.env.example deployment/compose/.env.production
+          cd deployment/compose
+          export FRONTEND_VERSION=smoke BACKEND_VERSION=smoke
+          docker compose --env-file .env.production -f compose.production.yaml config --quiet
+          docker compose --env-file .env.production -f compose.production.yaml -f compose.production.vue.yaml config --quiet
+          docker compose --env-file .env.production -f compose.production.yaml -f compose.production.fastapi.yaml config --quiet
+          docker compose --env-file .env.production -f compose.production.yaml -f compose.production.vue.yaml -f compose.production.fastapi.yaml config --quiet
+          bash -n ../scripts/deploy.sh ../scripts/rollback.sh
+
       - uses: actions/setup-node@v5
         with:
           node-version: 22
