@@ -38,79 +38,8 @@
     }
   ],
   "compatibility": {
-    "react": [
-      "express",
-      "fastapi"
-    ],
-    "vue": [
-      "express",
-      "fastapi"
-    ]
-  },
-  "tooling": {
-    "frontends": {
-      "react": {
-        "linting": {
-          "options": [
-            {
-              "id": "eslint",
-              "name": "ESLint",
-              "default": true
-            },
-            {
-              "id": "biome",
-              "name": "Biome",
-              "default": false
-            }
-          ]
-        }
-      },
-      "vue": {
-        "linting": {
-          "options": [
-            {
-              "id": "eslint",
-              "name": "ESLint",
-              "default": true
-            },
-            {
-              "id": "biome",
-              "name": "Biome (experimental Vue support)",
-              "default": false
-            }
-          ]
-        }
-      }
-    },
-    "backends": {
-      "express": {
-        "linting": {
-          "options": [
-            {
-              "id": "eslint",
-              "name": "ESLint",
-              "default": true
-            },
-            {
-              "id": "biome",
-              "name": "Biome",
-              "default": false
-            }
-          ]
-        }
-      },
-      "fastapi": {
-        "linting": {
-          "options": [
-            {
-              "id": "ruff",
-              "name": "Ruff",
-              "default": true
-            }
-          ]
-        }
-      }
-    }
+    "react": ["express", "fastapi"],
+    "vue": ["express", "fastapi"]
   },
   "files": {
     "exclude": [
@@ -123,8 +52,7 @@
       "__pycache__"
     ],
     "include": [
-      ".gitignore",
-      ".github/workflows/cdis-generated.yml"
+      ".gitignore"
     ]
   }
 }

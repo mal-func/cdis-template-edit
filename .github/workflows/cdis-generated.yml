@@ -30,6 +30,7 @@ jobs:
             exit 1
           fi
           npm install
+          npx prisma generate
           npm run lint
           npm test --if-present
           npm run build
