@@ -16,6 +16,8 @@ fi
 
 # shellcheck disable=SC1091
 source previous-versions.env
-echo "==> Rolling back to frontend=$FRONTEND_VERSION backend=$BACKEND_VERSION"
+FRONTEND_STACK="${FRONTEND_STACK:-react}"
+BACKEND_STACK="${BACKEND_STACK:-express}"
+echo "==> Rolling back to frontend=$FRONTEND_VERSION ($FRONTEND_STACK) backend=$BACKEND_VERSION ($BACKEND_STACK)"
 
-exec "$SCRIPT_DIR/deploy.sh" "$FRONTEND_VERSION" "$BACKEND_VERSION"
+exec "$SCRIPT_DIR/deploy.sh" "$FRONTEND_VERSION" "$BACKEND_VERSION" "$FRONTEND_STACK" "$BACKEND_STACK"

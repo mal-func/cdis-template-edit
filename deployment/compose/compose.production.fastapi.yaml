@@ -1,0 +1,27 @@
+# Production FastAPI backend overlay. Combine with compose.production.yaml.
+# Requires BACKEND_IMAGE_FASTAPI in compose/.env.production.
+services:
+  backend:
+    image: ${BACKEND_IMAGE_FASTAPI:?BACKEND_IMAGE_FASTAPI is required}:${BACKEND_VERSION:?BACKEND_VERSION is required}
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      CORS_ORIGIN: ${PUBLIC_ORIGIN:?PUBLIC_ORIGIN is required}
+      DATABASE_URL: mysql+asyncmy://cdis:${DB_PASSWORD}@mysql:3306/cdis
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
+      JWT_ACCESS_EXPIRES_IN: 15m
+      REFRESH_TOKEN_EXPIRES_IN_DAYS: 7
+      BCRYPT_SALT_ROUNDS: 12
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: 5
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: 15
+      TRUST_PROXY_HOPS: 1
+      ALLOW_SELF_REGISTRATION: ${ALLOW_SELF_REGISTRATION:-false}
+  migrate:
+    image: ${BACKEND_IMAGE_FASTAPI:?BACKEND_IMAGE_FASTAPI is required}:${BACKEND_VERSION:?BACKEND_VERSION is required}
+    environment:
+      DATABASE_URL: mysql+asyncmy://cdis:${DB_PASSWORD}@mysql:3306/cdis
+      BCRYPT_SALT_ROUNDS: 12
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-}
+    command: ["sh", "-c", "alembic upgrade head && python -m app.seed"]

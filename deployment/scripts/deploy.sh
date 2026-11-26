@@ -32,7 +32,20 @@ set -euo pipefail
 cd "$(dirname "$0")/../compose"
 
 FRONTEND_VERSION="${1:?Usage: deploy.sh <frontend-version> <backend-version>}"
-BACKEND_VERSION="${2:?Usage: deploy.sh <frontend-version> <backend-version>}"
+BACKEND_VERSION="${2:?Usage: deploy.sh <frontend-version> <backend-version> [react|vue] [express|fastapi]}"
+FRONTEND_STACK="${3:-react}"
+BACKEND_STACK="${4:-express}"
+
+case "$FRONTEND_STACK" in
+  react) ;;
+  vue) ;;
+  *) echo "Unsupported frontend stack: $FRONTEND_STACK (expected react or vue)." >&2; exit 1 ;;
+esac
+case "$BACKEND_STACK" in
+  express) ;;
+  fastapi) ;;
+  *) echo "Unsupported backend stack: $BACKEND_STACK (expected express or fastapi)." >&2; exit 1 ;;
+esac
 
 if [ ! -f .env.production ]; then
   echo "compose/.env.production not found. Copy env/production.env.example and fill in real values first." >&2
@@ -42,9 +55,17 @@ fi
 cat > pending-versions.env <<EOF
 FRONTEND_VERSION=$FRONTEND_VERSION
 BACKEND_VERSION=$BACKEND_VERSION
+FRONTEND_STACK=$FRONTEND_STACK
+BACKEND_STACK=$BACKEND_STACK
 EOF
 
 COMPOSE=(docker compose -f compose.production.yaml)
+if [ "$FRONTEND_STACK" = "vue" ]; then
+  COMPOSE+=(-f compose.production.vue.yaml)
+fi
+if [ "$BACKEND_STACK" = "fastapi" ]; then
+  COMPOSE+=(-f compose.production.fastapi.yaml)
+fi
 ENV_FILES=(--env-file .env.production)
 if [ -f .env.https ]; then
   COMPOSE+=(-f compose.https.yaml)

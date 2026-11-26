@@ -1,0 +1,5 @@
+# Production Vue frontend overlay. Combine with compose.production.yaml.
+# Requires FRONTEND_IMAGE_VUE in compose/.env.production.
+services:
+  frontend:
+    image: ${FRONTEND_IMAGE_VUE:?FRONTEND_IMAGE_VUE is required}:${FRONTEND_VERSION:?FRONTEND_VERSION is required}
