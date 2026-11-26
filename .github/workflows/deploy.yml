@@ -25,8 +25,20 @@ on:
         description: "Frontend image tag/SHA to deploy (blank = keep what's live)"
         required: false
       backend_version:
-        description: "Backend image tag/SHA to deploy (blank = keep what's live)"
+        description: "Backend image tag/SHA to deploy"
         required: false
+      frontend_stack:
+        description: "Frontend implementation"
+        type: choice
+        options: [react, vue]
+        default: react
+        required: true
+      backend_stack:
+        description: "Backend implementation"
+        type: choice
+        options: [express, fastapi]
+        default: express
+        required: true
 
 # Never two deploys on the server at once; a newer one waits rather
 # than cancelling a deploy mid-migration.
@@ -58,6 +70,8 @@ jobs:
           RUN_SHA: ${{ github.event.workflow_run.head_sha }}
           INPUT_FRONTEND: ${{ github.event.inputs.frontend_version }}
           INPUT_BACKEND: ${{ github.event.inputs.backend_version }}
+          INPUT_FRONTEND_STACK: ${{ github.event.inputs.frontend_stack }}
+          INPUT_BACKEND_STACK: ${{ github.event.inputs.backend_stack }}
         run: |
           if [ -n "$RUN_SHA" ]; then
             FRONTEND_VERSION="$RUN_SHA"
@@ -79,9 +93,13 @@ jobs:
             exit 1
           fi
 
+          FRONTEND_STACK="${INPUT_FRONTEND_STACK:-react}"
+          BACKEND_STACK="${INPUT_BACKEND_STACK:-express}"
           echo "frontend=$FRONTEND_VERSION" >> "$GITHUB_OUTPUT"
           echo "backend=$BACKEND_VERSION" >> "$GITHUB_OUTPUT"
+          echo "frontend_stack=$FRONTEND_STACK" >> "$GITHUB_OUTPUT"
+          echo "backend_stack=$BACKEND_STACK" >> "$GITHUB_OUTPUT"
 
       - name: Deploy
         working-directory: deployment
-        run: ./scripts/deploy.sh "${{ steps.versions.outputs.frontend }}" "${{ steps.versions.outputs.backend }}"
+        run: ./scripts/deploy.sh "${{ steps.versions.outputs.frontend }}" "${{ steps.versions.outputs.backend }}" "${{ steps.versions.outputs.frontend_stack }}" "${{ steps.versions.outputs.backend_stack }}"
