@@ -134,7 +134,7 @@ Migrations run while the previous version is still serving, so they must be back
 ./scripts/rollback.sh   # re-deploys whatever was live immediately before the last deploy.sh run
 ```
 
-The older image's `migrate` step is a harmless no-op against the newer schema ("No pending migrations").
+Rollback deliberately does not rerun migrations or attempt a schema downgrade. The database remains at its current revision, so migrations must be backward-compatible with the previous application version; verify this before relying on rollback.
 
 **If a migration fails**, Prisma records it and refuses all later deploys with `P3009`. MySQL can't roll DDL back, so first check which statements of that migration did apply and undo them (or make the fixed migration tolerate them). Then:
 

@@ -77,12 +77,16 @@ fi
 echo "==> Pulling frontend=$FRONTEND_VERSION backend=$BACKEND_VERSION"
 "${COMPOSE[@]}" "${ENV_FILES[@]}" --env-file pending-versions.env pull frontend backend
 
-echo "==> Applying migrations and seed with the new backend image..."
-if ! "${COMPOSE[@]}" "${ENV_FILES[@]}" --env-file pending-versions.env --profile tools run --rm migrate; then
-  rm -f pending-versions.env
-  echo "==> Migration failed. Nothing was switched: the previous version is still serving, and" \
-       "current-versions.env is unchanged. Fix the migration and deploy again." >&2
-  exit 1
+if [ "${SKIP_MIGRATIONS:-false}" = "true" ]; then
+  echo "==> Skipping migrations (rollback keeps the already-applied database schema)."
+else
+  echo "==> Applying migrations and seed with the new backend image..."
+  if ! "${COMPOSE[@]}" "${ENV_FILES[@]}" --env-file pending-versions.env --profile tools run --rm migrate; then
+    rm -f pending-versions.env
+    echo "==> Migration failed. Nothing was switched: the previous version is still serving, and" \
+         "current-versions.env is unchanged. Fix the migration and deploy again." >&2
+    exit 1
+  fi
 fi
 
 # Records what's currently live BEFORE switching, so rollback.sh has
