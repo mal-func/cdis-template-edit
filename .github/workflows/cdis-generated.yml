@@ -31,6 +31,7 @@ jobs:
           fi
           npm install
           npm run lint
+          npm run format:check --if-present
           npm test --if-present
           npm run build
 
@@ -65,4 +66,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e '.[dev]'
           ruff check .
+          if grep -q '^\\[tool\\.ruff\\.format\\]' pyproject.toml; then
+            ruff format --check .
+          fi
           pytest
