@@ -72,6 +72,8 @@ jobs:
           INPUT_BACKEND: ${{ github.event.inputs.backend_version }}
           INPUT_FRONTEND_STACK: ${{ github.event.inputs.frontend_stack }}
           INPUT_BACKEND_STACK: ${{ github.event.inputs.backend_stack }}
+          DEFAULT_FRONTEND_STACK: ${{ vars.DEPLOY_FRONTEND_STACK || 'react' }}
+          DEFAULT_BACKEND_STACK: ${{ vars.DEPLOY_BACKEND_STACK || 'express' }}
         run: |
           if [ -n "$RUN_SHA" ]; then
             FRONTEND_VERSION="$RUN_SHA"
@@ -93,8 +95,8 @@ jobs:
             exit 1
           fi
 
-          FRONTEND_STACK="${INPUT_FRONTEND_STACK:-react}"
-          BACKEND_STACK="${INPUT_BACKEND_STACK:-express}"
+          FRONTEND_STACK="${INPUT_FRONTEND_STACK:-$DEFAULT_FRONTEND_STACK}"
+          BACKEND_STACK="${INPUT_BACKEND_STACK:-$DEFAULT_BACKEND_STACK}"
           echo "frontend=$FRONTEND_VERSION" >> "$GITHUB_OUTPUT"
           echo "backend=$BACKEND_VERSION" >> "$GITHUB_OUTPUT"
           echo "frontend_stack=$FRONTEND_STACK" >> "$GITHUB_OUTPUT"
