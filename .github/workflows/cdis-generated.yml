@@ -67,7 +67,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e '.[dev]'
           ruff check .
-          if grep -q '^\\[tool\\.ruff\\.format\\]' pyproject.toml; then
+          if grep -Fq '[tool.ruff.format]' pyproject.toml; then
             ruff format --check .
           fi
           pytest
