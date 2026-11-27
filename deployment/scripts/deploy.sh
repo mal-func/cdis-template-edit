@@ -125,7 +125,7 @@ if [ "$HEALTHY" -ne 1 ]; then
 fi
 
 echo "==> Running application smoke checks through the reverse proxy..."
-if ! ../scripts/health-check.sh "$DEFAULT_HEALTH_URL"; then
+if ! bash ../scripts/health-check.sh "$DEFAULT_HEALTH_URL"; then
   echo "==> Application smoke checks failed. Run ./scripts/rollback.sh to return to the last known-good version." >&2
   exit 1
 fi
