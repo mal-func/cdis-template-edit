@@ -44,6 +44,9 @@ jobs:
           bash -n ../scripts/rollback.sh
           bash -n ../scripts/health-check.sh
 
+      - name: Test production deploy stack selection without a server
+        run: bash deployment/tests/deploy-stack-selection.sh
+
       - uses: actions/setup-node@v5
         with:
           node-version: 22
