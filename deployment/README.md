@@ -151,7 +151,7 @@ For an ad-hoc check against any running environment, without touching deploy sta
 ./scripts/health-check.sh https://app.example.com
 ```
 
-It checks backend `/health` (200), frontend `/` (200), and unauthenticated `/api/v1/auth/me` (expects 401 specifically — a 200 there would mean auth is broken open).
+It checks backend `/health` (200), frontend `/` (200), and unauthenticated `/api/v1/auth/me` (expects 401 specifically — a 200 there would mean auth is broken open). Every successful `deploy.sh` now runs this full smoke check after its initial health poll, using HTTP or HTTPS according to the server's HTTPS configuration.
 
 Verified end to end against a throwaway local registry: first deploy onto an empty database, an upgrade carrying a migration, rollback, a deliberately broken migration (aborted, old version kept serving with health 200 throughout), the resulting `P3009`, recovery with `resolve-failed-migration.sh`, and a clean redeploy.
 
@@ -197,7 +197,8 @@ One-time setup, once the server exists:
 
 1. **Register the runner** — Settings → Actions → Runners → New self-hosted runner, follow GitHub's `./config.sh` command on the server, then install it as a service (`sudo ./svc.sh install && sudo ./svc.sh start`). It must be runner v2.327.1 or newer — the workflows use Node 24 actions.
 2. **Create `deployment/compose/.env.production`** inside the runner's checkout of the repo (see Production stack). The workflow checks out with `clean: false`, so this and the version files survive between runs.
-3. **Turn it on** — set the repository variable `DEPLOY_ENABLED` to `true` (Settings → Secrets and variables → Actions → Variables). Until then the workflow skips, rather than queueing jobs for a runner that doesn't exist.
+3. **Choose the automatic deployment stack (optional)** — set repository variables `DEPLOY_FRONTEND_STACK` to `react` or `vue`, and `DEPLOY_BACKEND_STACK` to `express` or `fastapi`. They default to `react` and `express`; manual workflow dispatch can override them for one deployment.
+4. **Turn it on** — set the repository variable `DEPLOY_ENABLED` to `true` (Settings → Secrets and variables → Actions → Variables). Until then the workflow skips, rather than queueing jobs for a runner that doesn't exist.
 
 **Standalone repos:** `cdis-frontend`/`cdis-backend`'s own CI publish their images and fire a `repository_dispatch` at `cdis-deployment`, whose own `.github/workflows/deploy.yml` fills in the other app's version from `current-versions.env`. Those workflows live only in the standalone repos (the export never copies `.github/`); see their READMEs.
 
@@ -223,7 +224,7 @@ This is a baseline suite — one representative path per concern. Deeper behavio
 
 ## What's not here yet
 
-- A real production server — everything above is verified locally (including real pulls from a registry), not yet on a publicly reachable host
+- A real production server — configuration and local/CI checks are verified, but the deploy workflow and full smoke checks have not yet been exercised on a publicly reachable production host
 - A registered self-hosted runner (needs the server) — `deploy.yml` is written, linted and its version resolution tested, but not yet run for real
 - Real Let's Encrypt issuance (needs the domain + server)
 
