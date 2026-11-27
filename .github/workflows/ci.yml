@@ -40,6 +40,12 @@ jobs:
           docker compose --env-file .env.production -f compose.production.yaml -f compose.production.vue.yaml config --quiet
           docker compose --env-file .env.production -f compose.production.yaml -f compose.production.fastapi.yaml config --quiet
           docker compose --env-file .env.production -f compose.production.yaml -f compose.production.vue.yaml -f compose.production.fastapi.yaml config --quiet
+          cat > .env.stack-smoke <<'EOF'
+          FRONTEND_BUILD_CONTEXT=../../front-end/vue
+          BACKEND_BUILD_CONTEXT=../../back-end/fastapi
+          EOF
+          docker compose --env-file .env.stack-smoke -f compose.yaml -f compose.fastapi.yaml config --quiet
+          rm -f .env.stack-smoke
           bash -n ../scripts/deploy.sh
           bash -n ../scripts/rollback.sh
           bash -n ../scripts/health-check.sh
