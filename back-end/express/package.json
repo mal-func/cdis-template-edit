@@ -29,7 +29,8 @@
   "overrides": {
     "deepmerge-ts": "^8.0.0",
     "mariadb": "3.5.4",
-    "mysql2": "3.24.4"
+    "mysql2": "3.24.4",
+    "effect": "3.22.1"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.9.1",

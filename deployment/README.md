@@ -34,7 +34,9 @@ compose/
 ├── mysql-init/                creates the cdis_test database on the dev MySQL's first start
 ├── compose.yaml               local full stack — builds React + Express by default
 ├── compose.fastapi.yaml       overlay to select the FastAPI backend
-├── compose.production.yaml    production — pulls pinned images by commit SHA
+├── compose.production.yaml    production — pulls pinned React/Express images by commit SHA
+├── compose.production.vue.yaml     production Vue frontend overlay
+├── compose.production.fastapi.yaml production FastAPI backend + Alembic overlay
 ├── compose.https-init.yaml    HTTPS bootstrap overlay (certificate issuance)
 └── compose.https.yaml         steady-state HTTPS overlay
 
@@ -73,6 +75,8 @@ This builds the selected backend and frontend images, starts MySQL + backend + f
 
 The local stack always has an admin: `SEED_ADMIN_*` default to the E2E suite's `e2e-admin@example.com` / `e2e-admin-password`. That password is public, which is why this stack binds to `127.0.0.1` only — don't expose it.
 
+**Generated projects:** the CDIS CLI writes `compose/.env` with the selected frontend/backend build contexts. Run Compose from `deployment/` with `--env-file compose/.env`; for FastAPI it also adds `-f compose/compose.fastapi.yaml`. The generated root README contains the exact command for the selected combination. The CLI also writes the selected `FRONTEND_STACK` and `BACKEND_STACK` into `env/production.env.example`; after copying it to `compose/.env.production`, `scripts/deploy.sh` uses those values by default. Explicit third/fourth script arguments override them.
+
 Build contexts default to `../../back-end/express` and `../../front-end/react` in the monorepo. **Standalone `cdis-deployment`:** clone `cdis-backend` and `cdis-frontend` next to it and set, in `compose/.env`:
 
 ```bash
@@ -102,7 +106,8 @@ Fill in real values:
 |---|---|
 | `PUBLIC_ORIGIN` | e.g. `https://app.example.com` |
 | `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `JWT_ACCESS_SECRET` | long random values, unique to this server |
-| `FRONTEND_IMAGE`, `BACKEND_IMAGE` | image repositories without a tag — the monorepo CI's `publish` job prints them (e.g. `ghcr.io/<owner>/<repo>-backend`) |
+| `FRONTEND_IMAGE`, `BACKEND_IMAGE` | React and Express image repositories without a tag — the monorepo CI prints them |
+| `FRONTEND_IMAGE_VUE`, `BACKEND_IMAGE_FASTAPI` | Vue and FastAPI image repositories without a tag — required only for those stack choices |
 | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | creates your first admin on the first deploy; safe to leave in (never changes an existing password) or delete afterwards |
 | `ALLOW_SELF_REGISTRATION` | optional, default `false` — with it off, the seeded admin is currently the only way to get an account |
 | `HTTP_PORT` | optional, default `80` |
@@ -114,11 +119,11 @@ If the images are private (GHCR's default), log the server in once: `docker logi
 ## Deploying and rolling back
 
 ```bash
-./scripts/deploy.sh <frontend-version> <backend-version>
-# e.g. ./scripts/deploy.sh 22fdf43... 22fdf43...   (monorepo: the same commit SHA for both)
+./scripts/deploy.sh <frontend-version> <backend-version> [react|vue] [express|fastapi]
+# e.g. ./scripts/deploy.sh 22fdf43... 22fdf43... vue fastapi
 ```
 
-It:
+It selects the production overlays for the requested frontend/backend, then:
 
 1. pulls both images;
 2. runs the new backend image's `migrate` job — migrations, then the seed. **If this fails, it stops: the old version keeps serving and nothing is recorded;**
@@ -131,7 +136,7 @@ Migrations run while the previous version is still serving, so they must be back
 ./scripts/rollback.sh   # re-deploys whatever was live immediately before the last deploy.sh run
 ```
 
-The older image's `migrate` step is a harmless no-op against the newer schema ("No pending migrations").
+Rollback deliberately does not rerun migrations or attempt a schema downgrade. The database remains at its current revision, so migrations must be backward-compatible with the previous application version; verify this before relying on rollback.
 
 **If a migration fails**, Prisma records it and refuses all later deploys with `P3009`. MySQL can't roll DDL back, so first check which statements of that migration did apply and undo them (or make the fixed migration tolerate them). Then:
 
@@ -148,7 +153,7 @@ For an ad-hoc check against any running environment, without touching deploy sta
 ./scripts/health-check.sh https://app.example.com
 ```
 
-It checks backend `/health` (200), frontend `/` (200), and unauthenticated `/api/v1/auth/me` (expects 401 specifically — a 200 there would mean auth is broken open).
+It checks backend `/health` (200), frontend `/` (200), and unauthenticated `/api/v1/auth/me` (expects 401 specifically — a 200 there would mean auth is broken open). Every successful `deploy.sh` now runs this full smoke check after its initial health poll, using HTTP or HTTPS according to the server's HTTPS configuration.
 
 Verified end to end against a throwaway local registry: first deploy onto an empty database, an upgrade carrying a migration, rollback, a deliberately broken migration (aborted, old version kept serving with health 200 throughout), the resulting `P3009`, recovery with `resolve-failed-migration.sh`, and a clean redeploy.
 
@@ -194,7 +199,8 @@ One-time setup, once the server exists:
 
 1. **Register the runner** — Settings → Actions → Runners → New self-hosted runner, follow GitHub's `./config.sh` command on the server, then install it as a service (`sudo ./svc.sh install && sudo ./svc.sh start`). It must be runner v2.327.1 or newer — the workflows use Node 24 actions.
 2. **Create `deployment/compose/.env.production`** inside the runner's checkout of the repo (see Production stack). The workflow checks out with `clean: false`, so this and the version files survive between runs.
-3. **Turn it on** — set the repository variable `DEPLOY_ENABLED` to `true` (Settings → Secrets and variables → Actions → Variables). Until then the workflow skips, rather than queueing jobs for a runner that doesn't exist.
+3. **Choose the automatic deployment stack (optional)** — set repository variables `DEPLOY_FRONTEND_STACK` to `react` or `vue`, and `DEPLOY_BACKEND_STACK` to `express` or `fastapi`. They default to `react` and `express`; manual workflow dispatch can override them for one deployment.
+4. **Turn it on** — set the repository variable `DEPLOY_ENABLED` to `true` (Settings → Secrets and variables → Actions → Variables). Until then the workflow skips, rather than queueing jobs for a runner that doesn't exist.
 
 **Standalone repos:** `cdis-frontend`/`cdis-backend`'s own CI publish their images and fire a `repository_dispatch` at `cdis-deployment`, whose own `.github/workflows/deploy.yml` fills in the other app's version from `current-versions.env`. Those workflows live only in the standalone repos (the export never copies `.github/`); see their READMEs.
 
@@ -220,7 +226,7 @@ This is a baseline suite — one representative path per concern. Deeper behavio
 
 ## What's not here yet
 
-- A real production server — everything above is verified locally (including real pulls from a registry), not yet on a publicly reachable host
+- A real production server — configuration and local/CI checks are verified, but the deploy workflow and full smoke checks have not yet been exercised on a publicly reachable production host
 - A registered self-hosted runner (needs the server) — `deploy.yml` is written, linted and its version resolution tested, but not yet run for real
 - Real Let's Encrypt issuance (needs the domain + server)
 

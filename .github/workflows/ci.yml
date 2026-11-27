@@ -31,6 +31,28 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Validate production Compose overlays and deploy scripts
+        run: |
+          cp deployment/env/production.env.example deployment/compose/.env.production
+          cd deployment/compose
+          export FRONTEND_VERSION=smoke BACKEND_VERSION=smoke
+          docker compose --env-file .env.production -f compose.production.yaml config --quiet
+          docker compose --env-file .env.production -f compose.production.yaml -f compose.production.vue.yaml config --quiet
+          docker compose --env-file .env.production -f compose.production.yaml -f compose.production.fastapi.yaml config --quiet
+          docker compose --env-file .env.production -f compose.production.yaml -f compose.production.vue.yaml -f compose.production.fastapi.yaml config --quiet
+          cat > .env.stack-smoke <<'EOF'
+          FRONTEND_BUILD_CONTEXT=../../front-end/vue
+          BACKEND_BUILD_CONTEXT=../../back-end/fastapi
+          EOF
+          docker compose --env-file .env.production --env-file .env.stack-smoke -f compose.yaml -f compose.fastapi.yaml config --quiet
+          rm -f .env.stack-smoke
+          bash -n ../scripts/deploy.sh
+          bash -n ../scripts/rollback.sh
+          bash -n ../scripts/health-check.sh
+
+      - name: Test production deploy stack selection without a server
+        run: bash deployment/tests/deploy-stack-selection.sh
+
       - uses: actions/setup-node@v5
         with:
           node-version: 22
@@ -236,8 +258,63 @@ jobs:
   # publishes to its *own* ghcr.io/<owner>/<repo>-{backend,frontend}
   # with no edits. Tagged by commit SHA (what deploy.sh pins) plus
   # `main` as a moving convenience tag — production never deploys it.
+  validate-additional-stacks:
+    name: Validate Vue and FastAPI implementations
+    runs-on: ubuntu-latest
+    env:
+      JWT_ACCESS_SECRET: test-secret-that-is-long-enough-for-cdis
+      DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: front-end/vue/package-lock.json
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: back-end/fastapi/pyproject.toml
+      - name: Install Vue dependencies
+        working-directory: front-end/vue
+        run: npm ci
+      - name: Lint Vue frontend
+        working-directory: front-end/vue
+        run: npm run lint
+      - name: Test Vue frontend
+        working-directory: front-end/vue
+        run: npm test --if-present
+      - name: Build Vue frontend
+        working-directory: front-end/vue
+        run: npm run build
+      - name: Install FastAPI development dependencies
+        working-directory: back-end/fastapi
+        run: python -m pip install -e '.[dev]'
+      - name: Lint FastAPI backend
+        working-directory: back-end/fastapi
+        run: ruff check .
+      - name: Apply FastAPI migrations
+        working-directory: back-end/fastapi
+        run: alembic upgrade head
+      - name: Test FastAPI backend
+        working-directory: back-end/fastapi
+        run: pytest -q
+      - name: Verify FastAPI seed is idempotent
+        working-directory: back-end/fastapi
+        env:
+          DATABASE_URL: sqlite+aiosqlite:////tmp/cdis-seed-smoke.db
+          SEED_ADMIN_EMAIL: seed-admin@example.com
+          SEED_ADMIN_PASSWORD: seed-admin-password
+          SEED_ADMIN_NAME: Seed Admin
+        run: |
+          alembic upgrade head
+          python -m app.seed
+          python -m app.seed
+
   publish:
-    needs: ci
+    needs: [ci, validate-additional-stacks]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -254,6 +331,10 @@ jobs:
           base="ghcr.io/${GITHUB_REPOSITORY,,}"
           echo "backend=${base}-backend" >> "$GITHUB_OUTPUT"
           echo "frontend=${base}-frontend" >> "$GITHUB_OUTPUT"
+          echo "backendExpress=${base}-backend-express" >> "$GITHUB_OUTPUT"
+          echo "frontendReact=${base}-frontend-react" >> "$GITHUB_OUTPUT"
+          echo "backendFastapi=${base}-backend-fastapi" >> "$GITHUB_OUTPUT"
+          echo "frontendVue=${base}-frontend-vue" >> "$GITHUB_OUTPUT"
 
       - uses: docker/login-action@v4
         with:
@@ -276,6 +357,8 @@ jobs:
           tags: |
             ${{ steps.images.outputs.backend }}:${{ github.sha }}
             ${{ steps.images.outputs.backend }}:main
+            ${{ steps.images.outputs.backendExpress }}:${{ github.sha }}
+            ${{ steps.images.outputs.backendExpress }}:main
           cache-from: type=gha,scope=backend
           cache-to: type=gha,scope=backend,mode=max
 
@@ -294,9 +377,38 @@ jobs:
           tags: |
             ${{ steps.images.outputs.frontend }}:${{ github.sha }}
             ${{ steps.images.outputs.frontend }}:main
+            ${{ steps.images.outputs.frontendReact }}:${{ github.sha }}
+            ${{ steps.images.outputs.frontendReact }}:main
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,scope=frontend,mode=max
 
+      - name: Build and push FastAPI backend
+        uses: docker/build-push-action@v7
+        with:
+          context: back-end/fastapi
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ steps.images.outputs.backendFastapi }}:${{ github.sha }}
+            ${{ steps.images.outputs.backendFastapi }}:main
+          cache-from: type=gha,scope=backend-fastapi
+          cache-to: type=gha,scope=backend-fastapi,mode=max
+
+      - name: Build and push Vue frontend
+        uses: docker/build-push-action@v7
+        with:
+          context: front-end/vue
+          push: true
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            VITE_APP_NAME=CDIS
+            VITE_APP_ENV=production
+            VITE_API_BASE_URL=/api/v1
+          tags: |
+            ${{ steps.images.outputs.frontendVue }}:${{ github.sha }}
+            ${{ steps.images.outputs.frontendVue }}:main
+          cache-from: type=gha,scope=frontend-vue
+          cache-to: type=gha,scope=frontend-vue,mode=max
       - name: Summary
         run: |
           {
@@ -306,6 +418,8 @@ jobs:
             echo '```'
             echo "BACKEND_IMAGE=${{ steps.images.outputs.backend }}"
             echo "FRONTEND_IMAGE=${{ steps.images.outputs.frontend }}"
+            echo "BACKEND_IMAGE_FASTAPI=${{ steps.images.outputs.backendFastapi }}"
+            echo "FRONTEND_IMAGE_VUE=${{ steps.images.outputs.frontendVue }}"
             echo '```'
             echo "Deploy this commit: \`./scripts/deploy.sh ${{ github.sha }} ${{ github.sha }}\`"
           } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,73 @@
+name: CDIS generated project CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install and validate frontend
+        shell: bash
+        run: |
+          if [ -d front-end/react ]; then
+            cd front-end/react
+          elif [ -d front-end/vue ]; then
+            cd front-end/vue
+          else
+            echo 'No supported frontend directory found' >&2
+            exit 1
+          fi
+          npm install
+          npm run lint
+          npm run format:check --if-present
+          npm test --if-present
+          npm run build
+
+  backend:
+    name: Backend checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        if: ${{ hashFiles('back-end/express/package.json') != '' }}
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        if: ${{ hashFiles('back-end/fastapi/pyproject.toml') != '' }}
+        with:
+          python-version: '3.12'
+      - name: Install and validate Express backend
+        if: ${{ hashFiles('back-end/express/package.json') != '' }}
+        shell: bash
+        run: |
+          cd back-end/express
+          npm install
+          npx prisma generate
+          npm run lint
+          npm run format:check --if-present
+          npm test --if-present
+          npm run build
+      - name: Install and validate FastAPI backend
+        if: ${{ hashFiles('back-end/fastapi/pyproject.toml') != '' }}
+        shell: bash
+        run: |
+          cd back-end/fastapi
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev]'
+          ruff check .
+          if grep -Fq '[tool.ruff.format]' pyproject.toml; then
+            ruff format --check .
+          fi
+          pytest
