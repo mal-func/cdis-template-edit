@@ -75,6 +75,8 @@ This builds the selected backend and frontend images, starts MySQL + backend + f
 
 The local stack always has an admin: `SEED_ADMIN_*` default to the E2E suite's `e2e-admin@example.com` / `e2e-admin-password`. That password is public, which is why this stack binds to `127.0.0.1` only — don't expose it.
 
+**Generated projects:** the CDIS CLI writes `compose/.env` with the selected frontend/backend build contexts. Run Compose from `deployment/` with `--env-file compose/.env`; for FastAPI it also adds `-f compose/compose.fastapi.yaml`. The generated root README contains the exact command for the selected combination. The CLI also writes the selected `FRONTEND_STACK` and `BACKEND_STACK` into `env/production.env.example`; after copying it to `compose/.env.production`, `scripts/deploy.sh` uses those values by default. Explicit third/fourth script arguments override them.
+
 Build contexts default to `../../back-end/express` and `../../front-end/react` in the monorepo. **Standalone `cdis-deployment`:** clone `cdis-backend` and `cdis-frontend` next to it and set, in `compose/.env`:
 
 ```bash
